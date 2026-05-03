@@ -1,0 +1,7 @@
+{
+  "name": "hospital-familia-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

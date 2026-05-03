@@ -1,7 +1,12 @@
 # hospital-familia-app
 
-Repositorio frontend de `Hospital - Familia`.
+Frontend base de `Hospital - Familia`.
 
-Estado inicial:
-- repositorio creado,
-- pendiente de definir stack y primer scaffold.
+## Stack
+- Angular 20
+- Ionic 8
+- Capacitor 8
+
+## Estado inicial
+- scaffold frontend creado,
+- listo para instalar dependencias y comenzar modulos.
