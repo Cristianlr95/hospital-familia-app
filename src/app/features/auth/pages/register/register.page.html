@@ -1,0 +1,68 @@
+<ion-content class="auth-content" [fullscreen]="true">
+  <main class="auth-shell register-shell">
+    <section class="brand-panel">
+      <p class="eyebrow">Cuenta tutor</p>
+      <h1>Un acceso claro, privado y preparado para vincular pacientes.</h1>
+      <p>
+        Esta cuenta solo habilita tu identidad inicial. La informacion del paciente se mostrara despues de una vinculacion aprobada.
+      </p>
+    </section>
+
+    <section class="auth-card" aria-label="Registro tutor">
+      <div class="card-heading">
+        <p class="eyebrow">Registro</p>
+        <h2>Crear cuenta</h2>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="two-cols">
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Nombre</ion-label>
+            <ion-input autocomplete="given-name" formControlName="firstName"></ion-input>
+          </ion-item>
+
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Apellido</ion-label>
+            <ion-input autocomplete="family-name" formControlName="lastName"></ion-input>
+          </ion-item>
+        </div>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Email</ion-label>
+          <ion-input type="email" inputmode="email" autocomplete="email" formControlName="email"></ion-input>
+        </ion-item>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Telefono opcional</ion-label>
+          <ion-input type="tel" inputmode="tel" autocomplete="tel" formControlName="phoneNumber"></ion-input>
+        </ion-item>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Contrasena</ion-label>
+          <ion-input type="password" autocomplete="new-password" formControlName="password"></ion-input>
+        </ion-item>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Confirmar contrasena</ion-label>
+          <ion-input type="password" autocomplete="new-password" formControlName="confirmPassword"></ion-input>
+        </ion-item>
+
+        <ion-note color="danger" *ngIf="form.touched && form.invalid">
+          Completa los campos requeridos. La contrasena debe tener 8 caracteres y coincidir.
+        </ion-note>
+
+        <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+        <ion-button expand="block" type="submit" [disabled]="isSubmitting">
+          <ion-spinner *ngIf="isSubmitting" name="crescent"></ion-spinner>
+          <span *ngIf="!isSubmitting">Crear cuenta tutor</span>
+        </ion-button>
+      </form>
+
+      <p class="switch-flow">
+        Ya tienes cuenta?
+        <a routerLink="/auth/login">Iniciar sesion</a>
+      </p>
+    </section>
+  </main>
+</ion-content>

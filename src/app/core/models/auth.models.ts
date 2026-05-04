@@ -1,0 +1,43 @@
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  timestamp: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string | null;
+}
+
+export interface UserDto {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string | null;
+  roles: string[];
+}
+
+export interface LoginResponse {
+  tokenType: 'Bearer';
+  accessToken: string;
+  refreshToken: string;
+  expiresInMs: number;
+  user: UserDto;
+}
+
+export interface AuthSession {
+  accessToken: string;
+  refreshToken: string;
+  user: UserDto;
+}

@@ -1,0 +1,131 @@
+.app-shell ion-toolbar {
+  --background: rgba(249, 246, 239, 0.88);
+  --border-width: 0;
+  backdrop-filter: blur(18px);
+}
+
+.dashboard-content {
+  --background:
+    radial-gradient(circle at 15% 8%, rgba(68, 130, 118, 0.22), transparent 28rem),
+    radial-gradient(circle at 90% 0%, rgba(221, 157, 91, 0.18), transparent 24rem),
+    linear-gradient(180deg, #f9f6ef 0%, #eef4ef 52%, #f7efe5 100%);
+  color: #16332f;
+}
+
+.hero {
+  padding: 5.5rem 1.25rem 1rem;
+}
+
+.eyebrow {
+  color: #65786f;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  color: #14312d;
+  font-size: clamp(2.4rem, 12vw, 5.4rem);
+  font-weight: 950;
+  letter-spacing: -0.08em;
+  line-height: 0.9;
+  margin: 0;
+}
+
+.hero-copy {
+  color: #53675f;
+  font-size: 1rem;
+  line-height: 1.55;
+  margin: 1rem 0 0;
+  max-width: 38rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 1rem;
+  padding: 0 1rem 2rem;
+}
+
+.empty-card,
+.panel {
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(58, 87, 80, 0.12);
+  border-radius: 1.5rem;
+  box-shadow: 0 1.25rem 3.5rem rgba(37, 58, 53, 0.12);
+  margin: 0;
+  overflow: hidden;
+}
+
+.empty-card ion-card-title,
+.panel h2 {
+  color: #14312d;
+  font-weight: 950;
+}
+
+.empty-card p,
+.panel p,
+dd {
+  color: #5d6f68;
+  line-height: 1.45;
+}
+
+.empty-card ion-button {
+  --border-radius: 1rem;
+  margin-top: 1rem;
+}
+
+.panel {
+  padding: 1rem;
+}
+
+dl {
+  display: grid;
+  gap: 0.7rem;
+  margin: 1rem 0;
+}
+
+dt {
+  color: #65786f;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+dd {
+  font-weight: 800;
+  margin: 0.2rem 0 0;
+  word-break: break-word;
+}
+
+.calm-panel {
+  background: rgba(216, 239, 225, 0.68);
+}
+
+.error-message {
+  background: #fff0ed;
+  border-radius: 0.9rem;
+  color: #9f2f20;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  margin: 0 1rem 1.5rem;
+  padding: 0.8rem;
+}
+
+@media (min-width: 760px) {
+  .hero {
+    padding-inline: 2rem;
+  }
+
+  .dashboard-grid {
+    gap: 1.25rem;
+    grid-template-columns: minmax(0, 1.15fr) minmax(22rem, 0.85fr);
+    padding-inline: 2rem;
+  }
+
+  .empty-card {
+    grid-row: span 2;
+  }
+}
