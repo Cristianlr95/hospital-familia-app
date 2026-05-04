@@ -1,0 +1,48 @@
+<ion-content class="auth-content" [fullscreen]="true">
+  <main class="auth-shell">
+    <section class="brand-panel">
+      <p class="eyebrow">Hospital Familia</p>
+      <h1>Informacion segura para acompanar con calma.</h1>
+      <p>
+        Ingresa como tutor para revisar tus vinculaciones y recibir avisos importantes del hospital.
+      </p>
+    </section>
+
+    <section class="auth-card" aria-label="Inicio de sesion">
+      <div class="card-heading">
+        <p class="eyebrow">Acceso tutor</p>
+        <h2>Iniciar sesion</h2>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Email</ion-label>
+          <ion-input type="email" inputmode="email" autocomplete="email" formControlName="email"></ion-input>
+        </ion-item>
+        <ion-note color="danger" *ngIf="form.controls.email.touched && form.controls.email.invalid">
+          Ingresa un email valido.
+        </ion-note>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Contrasena</ion-label>
+          <ion-input type="password" autocomplete="current-password" formControlName="password"></ion-input>
+        </ion-item>
+        <ion-note color="danger" *ngIf="form.controls.password.touched && form.controls.password.invalid">
+          La contrasena debe tener al menos 8 caracteres.
+        </ion-note>
+
+        <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+        <ion-button expand="block" type="submit" [disabled]="isSubmitting">
+          <ion-spinner *ngIf="isSubmitting" name="crescent"></ion-spinner>
+          <span *ngIf="!isSubmitting">Ingresar</span>
+        </ion-button>
+      </form>
+
+      <p class="switch-flow">
+        Aun no tienes cuenta?
+        <a routerLink="/auth/register">Crear cuenta de tutor</a>
+      </p>
+    </section>
+  </main>
+</ion-content>

@@ -1,20 +1,10 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Blank
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-  </div>
+<ion-content class="home-content" [fullscreen]="true">
+  <main class="legacy-shell">
+    <p class="eyebrow">Hospital Familia</p>
+    <h1>El acceso principal ahora esta en Auth.</h1>
+    <p>
+      Inicia sesion o crea tu cuenta de tutor para continuar con el flujo seguro conectado al backend.
+    </p>
+    <ion-button routerLink="/auth/login">Ir a iniciar sesion</ion-button>
+  </main>
 </ion-content>

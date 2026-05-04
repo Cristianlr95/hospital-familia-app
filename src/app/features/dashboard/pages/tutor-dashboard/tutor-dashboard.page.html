@@ -1,0 +1,63 @@
+<ion-header class="app-shell" [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Hospital Familia</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="logout()">Salir</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="dashboard-content" [fullscreen]="true">
+  <section class="hero">
+    <p class="eyebrow">Vista tutor</p>
+    <h1>Hola{{ user ? ', ' + user.firstName : '' }}.</h1>
+    <p class="hero-copy">
+      Tu cuenta ya esta activa. El siguiente paso es vincular un paciente con autorizacion del hospital.
+    </p>
+  </section>
+
+  <main class="dashboard-grid">
+    <ion-card class="empty-card">
+      <ion-card-header>
+        <ion-card-subtitle>Sin pacientes vinculados</ion-card-subtitle>
+        <ion-card-title>Vincula tu primer paciente</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>
+          Para proteger la privacidad, no mostraremos informacion clinica hasta que el hospital apruebe la vinculacion tutor-paciente.
+        </p>
+        <ion-button expand="block" disabled>
+          Vincular paciente proximamente
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <section class="panel">
+      <p class="eyebrow">Cuenta</p>
+      <h2>Sesion validada</h2>
+      <dl>
+        <div>
+          <dt>Email</dt>
+          <dd>{{ user?.email }}</dd>
+        </div>
+        <div>
+          <dt>Rol</dt>
+          <dd>{{ user?.roles?.join(', ') }}</dd>
+        </div>
+      </dl>
+      <ion-button fill="clear" size="small" (click)="refreshSession()" [disabled]="isRefreshing">
+        Validar sesion
+      </ion-button>
+    </section>
+
+    <section class="panel calm-panel">
+      <p class="eyebrow">Proximo modulo</p>
+      <h2>Vinculacion tutor-paciente</h2>
+      <p>
+        Este espacio quedara listo para ingresar codigo manual o QR cuando el backend de vinculacion este disponible.
+      </p>
+    </section>
+  </main>
+
+  <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
+</ion-content>
