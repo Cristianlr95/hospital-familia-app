@@ -1,12 +1,13 @@
 .app-shell ion-toolbar {
-  --background: rgba(249, 246, 239, 0.9);
-  --border-width: 0;
-  backdrop-filter: blur(18px);
+  --background: rgba(255, 255, 255, 0.96);
+  --border-color: var(--hf-soft-border);
+  --border-width: 0 0 1px;
+  --color: var(--hf-text);
 }
 
 .link-content {
-  --background: linear-gradient(180deg, #f9f6ef 0%, #eef4ef 56%, #f7efe5 100%);
-  color: #16332f;
+  --background: var(--hf-background);
+  color: var(--hf-text);
 }
 
 .link-shell {
@@ -18,54 +19,56 @@
 }
 
 .intro h1 {
-  color: #14312d;
-  font-size: clamp(2.1rem, 10vw, 4.3rem);
-  font-weight: 950;
-  letter-spacing: -0.06em;
-  line-height: 0.95;
+  color: var(--hf-text);
+  font-size: 2.15rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.06;
   margin: 0;
 }
 
 .intro p,
 .form-panel p {
-  color: #53675f;
+  color: var(--hf-muted);
   line-height: 1.5;
 }
 
 .eyebrow {
-  color: #65786f;
+  color: var(--hf-muted);
   font-size: 0.74rem;
   font-weight: 900;
-  letter-spacing: 0.13em;
+  letter-spacing: 0;
   margin: 0 0 0.45rem;
   text-transform: uppercase;
 }
 
 .form-panel {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(58, 87, 80, 0.12);
-  border-radius: 1rem;
-  box-shadow: 0 1rem 2.8rem rgba(37, 58, 53, 0.1);
+  background: var(--hf-surface);
+  border: 1px solid var(--hf-soft-border);
+  border-radius: var(--hf-radius);
+  box-shadow: var(--hf-shadow);
   padding: 1rem;
 }
 
 .field {
-  --background: #f6f9f5;
-  --border-radius: 0.9rem;
+  --background: #ffffff;
+  --border-radius: var(--hf-radius);
+  --color: var(--hf-text);
+  --highlight-color-focused: var(--ion-color-primary);
   --padding-start: 0.9rem;
-  border: 1px solid rgba(58, 87, 80, 0.12);
-  border-radius: 0.9rem;
+  border: 1px solid var(--hf-border);
+  border-radius: var(--hf-radius);
   margin-bottom: 0.35rem;
 }
 
 ion-button {
-  --border-radius: 0.9rem;
+  --border-radius: var(--hf-radius);
   margin-top: 0.9rem;
 }
 
 .error-message,
 .success-message {
-  border-radius: 0.9rem;
+  border-radius: var(--hf-radius);
   font-size: 0.9rem;
   line-height: 1.35;
   margin: 0.9rem 0 0;
@@ -73,17 +76,18 @@ ion-button {
 }
 
 .error-message {
-  background: #fff0ed;
-  color: #9f2f20;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--hf-error);
 }
 
 .success-message {
-  background: #e9f7ed;
-  border: 1px solid rgba(68, 130, 118, 0.2);
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
 }
 
 .success-message h2 {
-  color: #14312d;
+  color: var(--hf-text);
   font-size: 1.3rem;
   margin: 0;
 }
@@ -92,5 +96,9 @@ ion-button {
   .link-shell {
     grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.85fr);
     padding-top: 6.5rem;
+  }
+
+  .intro h1 {
+    font-size: 3.4rem;
   }
 }
