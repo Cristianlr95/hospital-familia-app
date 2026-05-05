@@ -1,0 +1,55 @@
+<ion-header class="app-shell" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard/tutor" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Vincular paciente</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="link-content" [fullscreen]="true">
+  <main class="link-shell">
+    <section class="intro">
+      <p class="eyebrow">Codigo manual</p>
+      <h1>Solicita acceso al paciente.</h1>
+      <p>
+        El hospital revisara la solicitud antes de habilitar cualquier informacion del paciente.
+      </p>
+    </section>
+
+    <section class="form-panel" aria-label="Solicitud de vinculacion">
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Codigo entregado por el hospital</ion-label>
+          <ion-input
+            type="text"
+            inputmode="text"
+            autocomplete="off"
+            autocapitalize="characters"
+            formControlName="patientCode"
+          ></ion-input>
+        </ion-item>
+        <ion-note color="danger" *ngIf="form.controls.patientCode.touched && form.controls.patientCode.invalid">
+          Ingresa un codigo valido.
+        </ion-note>
+
+        <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+        <div class="success-message" *ngIf="createdRequest">
+          <p class="eyebrow">Solicitud enviada</p>
+          <h2>Quedo en revision</h2>
+          <p>Estado actual: {{ createdRequest.status }}</p>
+        </div>
+
+        <ion-button expand="block" type="submit" [disabled]="isSubmitting">
+          <ion-spinner *ngIf="isSubmitting" name="crescent"></ion-spinner>
+          <span *ngIf="!isSubmitting">Enviar solicitud</span>
+        </ion-button>
+
+        <ion-button expand="block" fill="clear" type="button" (click)="goToDashboard()">
+          Volver al dashboard
+        </ion-button>
+      </form>
+    </section>
+  </main>
+</ion-content>

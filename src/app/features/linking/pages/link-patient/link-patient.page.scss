@@ -1,0 +1,96 @@
+.app-shell ion-toolbar {
+  --background: rgba(249, 246, 239, 0.9);
+  --border-width: 0;
+  backdrop-filter: blur(18px);
+}
+
+.link-content {
+  --background: linear-gradient(180deg, #f9f6ef 0%, #eef4ef 56%, #f7efe5 100%);
+  color: #16332f;
+}
+
+.link-shell {
+  display: grid;
+  gap: 1rem;
+  margin: 0 auto;
+  max-width: 58rem;
+  padding: 5rem 1rem 2rem;
+}
+
+.intro h1 {
+  color: #14312d;
+  font-size: clamp(2.1rem, 10vw, 4.3rem);
+  font-weight: 950;
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+  margin: 0;
+}
+
+.intro p,
+.form-panel p {
+  color: #53675f;
+  line-height: 1.5;
+}
+
+.eyebrow {
+  color: #65786f;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+}
+
+.form-panel {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(58, 87, 80, 0.12);
+  border-radius: 1rem;
+  box-shadow: 0 1rem 2.8rem rgba(37, 58, 53, 0.1);
+  padding: 1rem;
+}
+
+.field {
+  --background: #f6f9f5;
+  --border-radius: 0.9rem;
+  --padding-start: 0.9rem;
+  border: 1px solid rgba(58, 87, 80, 0.12);
+  border-radius: 0.9rem;
+  margin-bottom: 0.35rem;
+}
+
+ion-button {
+  --border-radius: 0.9rem;
+  margin-top: 0.9rem;
+}
+
+.error-message,
+.success-message {
+  border-radius: 0.9rem;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  margin: 0.9rem 0 0;
+  padding: 0.85rem;
+}
+
+.error-message {
+  background: #fff0ed;
+  color: #9f2f20;
+}
+
+.success-message {
+  background: #e9f7ed;
+  border: 1px solid rgba(68, 130, 118, 0.2);
+}
+
+.success-message h2 {
+  color: #14312d;
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+@media (min-width: 760px) {
+  .link-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.85fr);
+    padding-top: 6.5rem;
+  }
+}

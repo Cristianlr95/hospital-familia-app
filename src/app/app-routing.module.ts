@@ -13,6 +13,11 @@ const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'link-patient',
+    loadChildren: () => import('./features/linking/linking.module').then((m) => m.LinkingModule),
+    canActivate: [authGuard],
+  },
+  {
     path: 'home',
     loadChildren: () => import('./home/home.module').then((m) => m.HomePageModule),
   },

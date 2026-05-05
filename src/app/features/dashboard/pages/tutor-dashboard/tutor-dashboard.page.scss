@@ -71,6 +71,34 @@ dd {
   line-height: 1.45;
 }
 
+.patient-list,
+.request-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.8rem;
+}
+
+.patient-row,
+.request-row {
+  align-items: center;
+  background: rgba(246, 249, 245, 0.9);
+  border: 1px solid rgba(58, 87, 80, 0.12);
+  border-radius: 1rem;
+  display: flex;
+  gap: 0.8rem;
+  justify-content: space-between;
+  padding: 0.85rem;
+}
+
+.patient-row h3,
+.request-row h3 {
+  color: #14312d;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.2;
+  margin: 0;
+}
+
 .empty-card ion-button {
   --border-radius: 1rem;
   margin-top: 1rem;
@@ -112,6 +140,10 @@ dd {
   line-height: 1.35;
   margin: 0 1rem 1.5rem;
   padding: 0.8rem;
+}
+
+.inline-error {
+  margin: 0.8rem 0 0;
 }
 
 @media (min-width: 760px) {
