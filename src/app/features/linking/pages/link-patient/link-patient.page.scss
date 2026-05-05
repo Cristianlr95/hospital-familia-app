@@ -1,0 +1,104 @@
+.app-shell ion-toolbar {
+  --background: rgba(255, 255, 255, 0.96);
+  --border-color: var(--hf-soft-border);
+  --border-width: 0 0 1px;
+  --color: var(--hf-text);
+}
+
+.link-content {
+  --background: var(--hf-background);
+  color: var(--hf-text);
+}
+
+.link-shell {
+  display: grid;
+  gap: 1rem;
+  margin: 0 auto;
+  max-width: 58rem;
+  padding: 5rem 1rem 2rem;
+}
+
+.intro h1 {
+  color: var(--hf-text);
+  font-size: 2.15rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.06;
+  margin: 0;
+}
+
+.intro p,
+.form-panel p {
+  color: var(--hf-muted);
+  line-height: 1.5;
+}
+
+.eyebrow {
+  color: var(--hf-muted);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+}
+
+.form-panel {
+  background: var(--hf-surface);
+  border: 1px solid var(--hf-soft-border);
+  border-radius: var(--hf-radius);
+  box-shadow: var(--hf-shadow);
+  padding: 1rem;
+}
+
+.field {
+  --background: #ffffff;
+  --border-radius: var(--hf-radius);
+  --color: var(--hf-text);
+  --highlight-color-focused: var(--ion-color-primary);
+  --padding-start: 0.9rem;
+  border: 1px solid var(--hf-border);
+  border-radius: var(--hf-radius);
+  margin-bottom: 0.35rem;
+}
+
+ion-button {
+  --border-radius: var(--hf-radius);
+  margin-top: 0.9rem;
+}
+
+.error-message,
+.success-message {
+  border-radius: var(--hf-radius);
+  font-size: 0.9rem;
+  line-height: 1.35;
+  margin: 0.9rem 0 0;
+  padding: 0.85rem;
+}
+
+.error-message {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--hf-error);
+}
+
+.success-message {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.success-message h2 {
+  color: var(--hf-text);
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+@media (min-width: 760px) {
+  .link-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.85fr);
+    padding-top: 6.5rem;
+  }
+
+  .intro h1 {
+    font-size: 3.4rem;
+  }
+}

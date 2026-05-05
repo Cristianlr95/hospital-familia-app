@@ -23,11 +23,22 @@
         <ion-card-title>Vincula tu primer paciente</ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <p>
+        <p *ngIf="!linkedPatients.length">
           Para proteger la privacidad, no mostraremos informacion clinica hasta que el hospital apruebe la vinculacion tutor-paciente.
         </p>
-        <ion-button expand="block" disabled>
-          Vincular paciente proximamente
+
+        <div class="patient-list" *ngIf="linkedPatients.length">
+          <article class="patient-row" *ngFor="let patient of linkedPatients">
+            <div>
+              <p class="eyebrow">Paciente aprobado</p>
+              <h3>{{ patient.displayName }}</h3>
+            </div>
+            <ion-badge color="success">Aprobado</ion-badge>
+          </article>
+        </div>
+
+        <ion-button expand="block" (click)="goToLinkPatient()">
+          Vincular paciente
         </ion-button>
       </ion-card-content>
     </ion-card>
@@ -51,11 +62,28 @@
     </section>
 
     <section class="panel calm-panel">
-      <p class="eyebrow">Proximo modulo</p>
+      <p class="eyebrow">Vinculaciones</p>
       <h2>Vinculacion tutor-paciente</h2>
-      <p>
-        Este espacio quedara listo para ingresar codigo manual o QR cuando el backend de vinculacion este disponible.
+      <ion-spinner *ngIf="isLoadingLinks" name="crescent"></ion-spinner>
+
+      <p *ngIf="!isLoadingLinks && !linkRequests.length">
+        Aun no tienes solicitudes. Ingresa el codigo entregado por el hospital para comenzar.
       </p>
+
+      <div class="request-list" *ngIf="!isLoadingLinks && linkRequests.length">
+        <article class="request-row" *ngFor="let request of linkRequests">
+          <div>
+            <p class="eyebrow">{{ request.status }}</p>
+            <h3>{{ request.patientDisplayName || 'Paciente en revision' }}</h3>
+            <p *ngIf="request.decisionReason">{{ request.decisionReason }}</p>
+          </div>
+        </article>
+      </div>
+
+      <p class="error-message inline-error" *ngIf="linkErrorMessage">{{ linkErrorMessage }}</p>
+      <ion-button fill="clear" size="small" (click)="loadLinkingSummary()" [disabled]="isLoadingLinks">
+        Actualizar vinculaciones
+      </ion-button>
     </section>
   </main>
 
