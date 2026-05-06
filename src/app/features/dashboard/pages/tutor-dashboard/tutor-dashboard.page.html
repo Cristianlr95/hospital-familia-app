@@ -19,8 +19,8 @@
   <main class="dashboard-grid">
     <ion-card class="empty-card">
       <ion-card-header>
-        <ion-card-subtitle>Sin pacientes vinculados</ion-card-subtitle>
-        <ion-card-title>Vincula tu primer paciente</ion-card-title>
+        <ion-card-subtitle>{{ linkedPatients.length ? 'Pacientes vinculados' : 'Sin pacientes vinculados' }}</ion-card-subtitle>
+        <ion-card-title>{{ linkedPatients.length ? 'Seguimiento autorizado' : 'Vincula tu primer paciente' }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <p *ngIf="!linkedPatients.length">
@@ -42,6 +42,68 @@
         </ion-button>
       </ion-card-content>
     </ion-card>
+
+    <section class="panel status-panel">
+      <p class="eyebrow">Estado autorizado</p>
+      <h2>Resumen clinico visible</h2>
+      <ion-spinner *ngIf="isLoadingPatientOverview" name="crescent"></ion-spinner>
+
+      <p *ngIf="!isLoadingPatientOverview && !patientStatuses.length">
+        Cuando el hospital apruebe una vinculacion, veras aqui solo el estado permitido para la familia.
+      </p>
+
+      <div class="status-list" *ngIf="!isLoadingPatientOverview && patientStatuses.length">
+        <article class="status-row" *ngFor="let status of patientStatuses">
+          <div class="status-row-header">
+            <div>
+              <p class="eyebrow">{{ status.currentService }}</p>
+              <h3>{{ status.displayName }}</h3>
+            </div>
+            <ion-badge color="primary">{{ status.careStatus }}</ion-badge>
+          </div>
+          <dl>
+            <div>
+              <dt>Ubicacion</dt>
+              <dd>{{ status.currentLocation }}</dd>
+            </div>
+            <div *ngIf="status.summary">
+              <dt>Resumen</dt>
+              <dd>{{ status.summary }}</dd>
+            </div>
+            <div>
+              <dt>Actualizado</dt>
+              <dd>{{ status.updatedAt | date: 'short' }}</dd>
+            </div>
+          </dl>
+        </article>
+      </div>
+
+      <p class="error-message inline-error" *ngIf="patientOverviewErrorMessage">{{ patientOverviewErrorMessage }}</p>
+      <ion-button fill="clear" size="small" (click)="loadPatientOverview()" [disabled]="isLoadingPatientOverview">
+        Actualizar estado
+      </ion-button>
+    </section>
+
+    <section class="panel events-panel">
+      <p class="eyebrow">Proximos eventos</p>
+      <h2>Calendario familiar</h2>
+
+      <p *ngIf="!isLoadingPatientOverview && !upcomingEvents.length">
+        No hay eventos visibles para los pacientes aprobados.
+      </p>
+
+      <div class="event-list" *ngIf="upcomingEvents.length">
+        <article class="event-row" *ngFor="let event of upcomingEvents">
+          <div>
+            <p class="eyebrow">{{ eventTypeLabel(event.type) }}</p>
+            <h3>{{ event.title }}</h3>
+            <p>{{ event.patientDisplayName }} - {{ event.scheduledAt | date: 'short' }}</p>
+            <p *ngIf="event.location">{{ event.location }}</p>
+          </div>
+          <ion-badge color="medium">{{ event.status }}</ion-badge>
+        </article>
+      </div>
+    </section>
 
     <section class="panel">
       <p class="eyebrow">Cuenta</p>

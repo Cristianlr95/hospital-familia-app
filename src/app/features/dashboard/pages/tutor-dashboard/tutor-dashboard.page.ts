@@ -1,10 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserDto } from '../../../../core/models/auth.models';
 import { LinkingService } from '../../../linking/services/linking.service';
 import { LinkRequestDto, LinkedPatientDto } from '../../../linking/models/linking.models';
+import { PatientEventDto } from '../../../events/models/patient-event.models';
+import { PatientEventService } from '../../../events/services/patient-event.service';
+import { PatientStatusDto } from '../../../patient/models/patient-status.models';
+import { PatientStatusService } from '../../../patient/services/patient-status.service';
 
 @Component({
   selector: 'app-tutor-dashboard-page',
@@ -15,19 +19,26 @@ import { LinkRequestDto, LinkedPatientDto } from '../../../linking/models/linkin
 export class TutorDashboardPage implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly linkingService = inject(LinkingService);
+  private readonly patientStatusService = inject(PatientStatusService);
+  private readonly patientEventService = inject(PatientEventService);
   private readonly router = inject(Router);
 
   user: UserDto | null = this.authService.getCurrentUser();
   linkedPatients: LinkedPatientDto[] = [];
   linkRequests: LinkRequestDto[] = [];
+  patientStatuses: PatientStatusDto[] = [];
+  upcomingEvents: PatientEventDto[] = [];
   isRefreshing = false;
   isLoadingLinks = false;
+  isLoadingPatientOverview = false;
   errorMessage = '';
   linkErrorMessage = '';
+  patientOverviewErrorMessage = '';
 
   ngOnInit(): void {
     this.refreshSession();
     this.loadLinkingSummary();
+    this.loadPatientOverview();
   }
 
   refreshSession(): void {
@@ -74,6 +85,57 @@ export class TutorDashboardPage implements OnInit {
         this.linkErrorMessage = error?.error?.message ?? 'No pudimos cargar tus vinculaciones.';
       },
     });
+  }
+
+  loadPatientOverview(): void {
+    if (this.isLoadingPatientOverview) {
+      return;
+    }
+
+    this.isLoadingPatientOverview = true;
+    this.patientOverviewErrorMessage = '';
+
+    this.patientStatusService.getMyStatuses().pipe(
+      switchMap((statuses) => {
+        if (!statuses.length) {
+          return of({ statuses, events: [] as PatientEventDto[] });
+        }
+
+        return forkJoin(
+          statuses.map((status) => this.patientEventService.getUpcomingEventsForTutor(status.patientPublicId)),
+        ).pipe(
+          map((eventGroups) => ({
+            statuses,
+            events: ([] as PatientEventDto[]).concat(...eventGroups).sort((first, second) => (
+              new Date(first.scheduledAt).getTime() - new Date(second.scheduledAt).getTime()
+            )),
+          })),
+        );
+      }),
+    ).subscribe({
+      next: ({ statuses, events }) => {
+        this.patientStatuses = statuses;
+        this.upcomingEvents = events;
+        this.isLoadingPatientOverview = false;
+      },
+      error: (error) => {
+        this.isLoadingPatientOverview = false;
+        this.patientOverviewErrorMessage = error?.error?.message ?? 'No pudimos cargar el estado autorizado de tus pacientes.';
+      },
+    });
+  }
+
+  eventTypeLabel(type: PatientEventDto['type']): string {
+    const labels: Record<PatientEventDto['type'], string> = {
+      SURGERY: 'Cirugia',
+      EXAM: 'Examen',
+      VISIT: 'Visita',
+      STATE_CHANGE: 'Cambio de estado',
+      DISCHARGE: 'Alta',
+      OTHER: 'Otro',
+    };
+
+    return labels[type] ?? type;
   }
 
   goToLinkPatient(): void {

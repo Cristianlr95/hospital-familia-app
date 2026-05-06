@@ -74,14 +74,17 @@ dd {
 }
 
 .patient-list,
-.request-list {
+.request-list,
+.status-list,
+.event-list {
   display: grid;
   gap: 0.75rem;
   margin-top: 0.8rem;
 }
 
 .patient-row,
-.request-row {
+.request-row,
+.event-row {
   align-items: center;
   background: #f9fafb;
   border: 1px solid var(--hf-soft-border);
@@ -93,7 +96,9 @@ dd {
 }
 
 .patient-row h3,
-.request-row h3 {
+.request-row h3,
+.status-row h3,
+.event-row h3 {
   color: var(--hf-text);
   font-size: 1rem;
   font-weight: 900;
@@ -133,6 +138,37 @@ dd {
 .calm-panel {
   background: #eff6ff;
   border-color: #bfdbfe;
+}
+
+.status-panel {
+  background: #f8fafc;
+}
+
+.status-row {
+  background: #ffffff;
+  border: 1px solid var(--hf-soft-border);
+  border-radius: var(--hf-radius);
+  padding: 0.9rem;
+}
+
+.status-row-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.8rem;
+  justify-content: space-between;
+}
+
+.status-row dl {
+  margin-bottom: 0;
+}
+
+.events-panel {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.event-row {
+  align-items: flex-start;
 }
 
 .error-message {
