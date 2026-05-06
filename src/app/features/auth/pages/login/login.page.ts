@@ -33,9 +33,11 @@ export class LoginPage {
     this.isSubmitting = true;
 
     this.authService.login({ email: email ?? '', password: password ?? '' }).subscribe({
-      next: () => {
+      next: (response) => {
         this.isSubmitting = false;
-        void this.router.navigate(['/dashboard/tutor']);
+        const roles = response.user.roles ?? [];
+        const dashboard = roles.includes('STAFF') || roles.includes('ADMIN') ? '/dashboard/staff' : '/dashboard/tutor';
+        void this.router.navigate([dashboard]);
       },
       error: (error) => {
         this.isSubmitting = false;

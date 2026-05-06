@@ -24,3 +24,19 @@ export interface PatientEventDto {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface PatientEventCreateRequest {
+  patientPublicId: string;
+  type: PatientEventType;
+  title: string;
+  description?: string | null;
+  scheduledAt: string;
+  estimatedDurationMinutes?: number | null;
+  service?: string | null;
+  location?: string | null;
+  responsibleStaff?: string | null;
+}
+
+export interface PatientEventStatusUpdateRequest {
+  status: PatientEventStatus;
+}

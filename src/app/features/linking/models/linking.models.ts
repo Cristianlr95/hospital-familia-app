@@ -18,3 +18,17 @@ export interface LinkedPatientDto {
   patientPublicId: string;
   displayName: string;
 }
+
+export interface PendingLinkRequestDto {
+  id: number;
+  status: LinkStatus;
+  requestedAt: string;
+  tutorEmail: string;
+  tutorFullName: string;
+  patientPublicId: string;
+  patientDisplayName: string;
+}
+
+export interface LinkDecisionRequest {
+  reason?: string | null;
+}

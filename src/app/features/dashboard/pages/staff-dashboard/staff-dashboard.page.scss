@@ -1,0 +1,195 @@
+.app-shell ion-toolbar {
+  --background: rgba(255, 255, 255, 0.96);
+  --border-color: var(--hf-soft-border);
+  --border-width: 0 0 1px;
+  --color: var(--hf-text);
+}
+
+.staff-content {
+  --background: var(--hf-background);
+  color: var(--hf-text);
+}
+
+.hero {
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 5rem 1rem 1rem;
+}
+
+.eyebrow {
+  color: var(--hf-muted);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  color: var(--hf-text);
+  font-size: 2.25rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.08;
+  margin: 0;
+}
+
+.hero-copy,
+.panel p {
+  color: var(--hf-muted);
+  line-height: 1.5;
+}
+
+.hero-copy {
+  max-width: 42rem;
+}
+
+.staff-grid {
+  display: grid;
+  gap: 1rem;
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 0 1rem 2rem;
+}
+
+.panel {
+  background: var(--hf-surface);
+  border: 1px solid var(--hf-soft-border);
+  border-radius: var(--hf-radius);
+  box-shadow: var(--hf-shadow);
+  padding: 1rem;
+}
+
+.panel-heading,
+.request-row,
+.event-row,
+.row-actions {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.8rem;
+}
+
+.panel-heading,
+.request-row,
+.event-row {
+  justify-content: space-between;
+}
+
+.panel h2,
+.request-row h3,
+.event-row h3 {
+  color: var(--hf-text);
+  font-weight: 850;
+  margin: 0;
+}
+
+.request-list,
+.event-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.8rem;
+}
+
+.request-row,
+.event-row {
+  background: #f9fafb;
+  border: 1px solid var(--hf-soft-border);
+  border-radius: var(--hf-radius);
+  padding: 0.85rem;
+}
+
+.row-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.text-action {
+  background: transparent;
+  border: 0;
+  color: var(--hf-primary);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 850;
+  padding: 0;
+}
+
+.field {
+  --background: #f9fafb;
+  --border-radius: var(--hf-radius);
+  border: 1px solid var(--hf-soft-border);
+  border-radius: var(--hf-radius);
+  margin-bottom: 0.75rem;
+}
+
+.form-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.event-form-panel ion-button {
+  --border-radius: var(--hf-radius);
+  margin-top: 0.5rem;
+}
+
+.error-message,
+.success-message {
+  border-radius: var(--hf-radius);
+  font-size: 0.88rem;
+  line-height: 1.35;
+  padding: 0.8rem;
+}
+
+.error-message {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--hf-error);
+}
+
+.success-message {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: var(--hf-success);
+  margin: 0 auto 1.5rem;
+  max-width: 72rem;
+}
+
+.inline-error {
+  margin: 0.8rem 0 0;
+}
+
+@media (min-width: 760px) {
+  .hero {
+    padding: 5.5rem 2rem 1.25rem;
+  }
+
+  .hero h1 {
+    font-size: 3.6rem;
+  }
+
+  .staff-grid {
+    gap: 1.25rem;
+    grid-template-columns: minmax(0, 1fr) minmax(23rem, 0.9fr);
+    padding-inline: 2rem;
+  }
+
+  .requests-panel {
+    grid-row: span 2;
+  }
+
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .hero {
+    padding: 2rem 1rem 1rem;
+  }
+
+  .request-row,
+  .event-row,
+  .panel-heading {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,168 @@
+<ion-header class="app-shell" [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Hospital Familia</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/dashboard/tutor">Tutor</ion-button>
+      <ion-button (click)="logout()">Salir</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="staff-content" [fullscreen]="true">
+  <section class="hero">
+    <p class="eyebrow">Panel staff</p>
+    <h1>Gestion de solicitudes y eventos familiares.</h1>
+    <p class="hero-copy">
+      Revisa vinculaciones pendientes, aprueba accesos autorizados y administra el calendario visible para tutores.
+    </p>
+  </section>
+
+  <main class="staff-grid">
+    <section class="panel requests-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Vinculaciones</p>
+          <h2>Solicitudes pendientes</h2>
+        </div>
+        <ion-button fill="clear" size="small" (click)="loadPendingRequests()" [disabled]="isLoadingRequests">
+          Actualizar
+        </ion-button>
+      </div>
+
+      <ion-spinner *ngIf="isLoadingRequests" name="crescent"></ion-spinner>
+      <p *ngIf="!isLoadingRequests && !pendingRequests.length">
+        No hay solicitudes pendientes por revisar.
+      </p>
+
+      <div class="request-list" *ngIf="pendingRequests.length">
+        <article class="request-row" *ngFor="let request of pendingRequests">
+          <div>
+            <p class="eyebrow">{{ request.requestedAt | date: 'short' }}</p>
+            <h3>{{ request.patientDisplayName }}</h3>
+            <p>{{ request.tutorFullName }} - {{ request.tutorEmail }}</p>
+            <button class="text-action" type="button" (click)="selectPatient(request.patientPublicId)">
+              Ver eventos del paciente
+            </button>
+          </div>
+          <div class="row-actions">
+            <ion-button size="small" color="success" (click)="approve(request)" [disabled]="actionRequestId === request.id">
+              Aprobar
+            </ion-button>
+            <ion-button size="small" color="danger" fill="outline" (click)="reject(request)" [disabled]="actionRequestId === request.id">
+              Rechazar
+            </ion-button>
+          </div>
+        </article>
+      </div>
+
+      <p class="error-message inline-error" *ngIf="requestErrorMessage">{{ requestErrorMessage }}</p>
+    </section>
+
+    <section class="panel event-form-panel">
+      <p class="eyebrow">Calendario</p>
+      <h2>Crear evento visible</h2>
+
+      <form [formGroup]="eventForm" (ngSubmit)="createEvent()">
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">ID publico del paciente</ion-label>
+          <ion-input formControlName="patientPublicId"></ion-input>
+        </ion-item>
+
+        <div class="form-grid">
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Tipo</ion-label>
+            <ion-select formControlName="type" interface="popover">
+              <ion-select-option *ngFor="let type of eventTypes" [value]="type">
+                {{ eventTypeLabel(type) }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Fecha y hora</ion-label>
+            <ion-input type="datetime-local" formControlName="scheduledAt"></ion-input>
+          </ion-item>
+        </div>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Titulo</ion-label>
+          <ion-input formControlName="title"></ion-input>
+        </ion-item>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Descripcion</ion-label>
+          <ion-textarea autoGrow="true" formControlName="description"></ion-textarea>
+        </ion-item>
+
+        <div class="form-grid">
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Duracion estimada</ion-label>
+            <ion-input type="number" formControlName="estimatedDurationMinutes"></ion-input>
+          </ion-item>
+
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Servicio</ion-label>
+            <ion-input formControlName="service"></ion-input>
+          </ion-item>
+        </div>
+
+        <div class="form-grid">
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Ubicacion</ion-label>
+            <ion-input formControlName="location"></ion-input>
+          </ion-item>
+
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Responsable</ion-label>
+            <ion-input formControlName="responsibleStaff"></ion-input>
+          </ion-item>
+        </div>
+
+        <ion-button expand="block" type="submit" [disabled]="isSavingEvent">
+          <ion-spinner *ngIf="isSavingEvent" name="crescent"></ion-spinner>
+          <span *ngIf="!isSavingEvent">Crear evento</span>
+        </ion-button>
+      </form>
+    </section>
+
+    <section class="panel events-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Eventos</p>
+          <h2>{{ selectedPatientPublicId ? 'Paciente seleccionado' : 'Buscar por paciente' }}</h2>
+        </div>
+        <ion-button fill="clear" size="small" (click)="loadEvents()" [disabled]="isLoadingEvents">
+          Cargar
+        </ion-button>
+      </div>
+
+      <ion-spinner *ngIf="isLoadingEvents" name="crescent"></ion-spinner>
+      <p *ngIf="!isLoadingEvents && selectedPatientPublicId && !events.length">
+        No hay eventos proximos para este paciente.
+      </p>
+
+      <div class="event-list" *ngIf="events.length">
+        <article class="event-row" *ngFor="let event of events">
+          <div>
+            <p class="eyebrow">{{ eventTypeLabel(event.type) }}</p>
+            <h3>{{ event.title }}</h3>
+            <p>{{ event.scheduledAt | date: 'short' }} - {{ event.location || 'Sin ubicacion' }}</p>
+            <p *ngIf="event.responsibleStaff">{{ event.responsibleStaff }}</p>
+          </div>
+          <ion-select
+            interface="popover"
+            [value]="event.status"
+            (ionChange)="changeEventStatus(event, $event.detail.value)"
+            aria-label="Estado del evento"
+          >
+            <ion-select-option *ngFor="let status of eventStatuses" [value]="status">{{ status }}</ion-select-option>
+          </ion-select>
+        </article>
+      </div>
+
+      <p class="error-message inline-error" *ngIf="eventErrorMessage">{{ eventErrorMessage }}</p>
+    </section>
+  </main>
+
+  <p class="success-message" *ngIf="successMessage">{{ successMessage }}</p>
+</ion-content>

@@ -3,7 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/auth.models';
-import { LinkRequestCreateRequest, LinkRequestDto, LinkedPatientDto } from '../models/linking.models';
+import {
+  LinkDecisionRequest,
+  LinkRequestCreateRequest,
+  LinkRequestDto,
+  LinkedPatientDto,
+  PendingLinkRequestDto,
+} from '../models/linking.models';
 
 @Injectable({ providedIn: 'root' })
 export class LinkingService {
@@ -24,6 +30,24 @@ export class LinkingService {
 
   getMyPatients(): Observable<LinkedPatientDto[]> {
     return this.http.get<ApiResponse<LinkedPatientDto[]>>(`${this.apiUrl}/my-patients`).pipe(
+      map((response) => response.data),
+    );
+  }
+
+  getPendingRequests(): Observable<PendingLinkRequestDto[]> {
+    return this.http.get<ApiResponse<PendingLinkRequestDto[]>>(`${this.apiUrl}/pending`).pipe(
+      map((response) => response.data),
+    );
+  }
+
+  approveRequest(id: number): Observable<PendingLinkRequestDto> {
+    return this.http.put<ApiResponse<PendingLinkRequestDto>>(`${this.apiUrl}/${id}/approve`, {}).pipe(
+      map((response) => response.data),
+    );
+  }
+
+  rejectRequest(id: number, request: LinkDecisionRequest): Observable<PendingLinkRequestDto> {
+    return this.http.put<ApiResponse<PendingLinkRequestDto>>(`${this.apiUrl}/${id}/reject`, request).pipe(
       map((response) => response.data),
     );
   }

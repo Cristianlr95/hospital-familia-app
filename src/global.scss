@@ -34,6 +34,10 @@
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
+* {
+  box-sizing: border-box;
+}
+
 html,
 body {
   background: var(--hf-background);
@@ -69,4 +73,46 @@ ion-note,
 p,
 dd {
   letter-spacing: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+p,
+ion-card-title,
+ion-card-subtitle,
+ion-label,
+ion-note {
+  overflow-wrap: anywhere;
+}
+
+ion-card-content,
+ion-list {
+  min-width: 0;
+}
+
+ion-button {
+  min-height: 44px;
+}
+
+@media (max-width: 480px) {
+  ion-content {
+    font-size: 1rem;
+  }
+
+  ion-card {
+    margin-inline: 0.75rem;
+  }
+
+  ion-card-header,
+  ion-card-content {
+    padding-inline: 1rem;
+  }
 }

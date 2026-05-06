@@ -85,7 +85,7 @@ dd {
 .patient-row,
 .request-row,
 .event-row {
-  align-items: center;
+  align-items: flex-start;
   background: #f9fafb;
   border: 1px solid var(--hf-soft-border);
   border-radius: var(--hf-radius);
@@ -203,5 +203,27 @@ dd {
 
   .empty-card {
     grid-row: span 2;
+  }
+}
+
+@media (max-width: 520px) {
+  .hero {
+    padding: 2rem 1rem 1rem;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .dashboard-grid {
+    padding: 0 0.75rem 1.5rem;
+  }
+
+  .patient-row,
+  .request-row,
+  .event-row,
+  .status-row-header {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 }
