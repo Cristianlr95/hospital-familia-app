@@ -48,10 +48,39 @@
             <ion-button size="small" color="success" (click)="approve(request)" [disabled]="actionRequestId === request.id">
               Aprobar
             </ion-button>
-            <ion-button size="small" color="danger" fill="outline" (click)="reject(request)" [disabled]="actionRequestId === request.id">
+            <ion-button
+              size="small"
+              color="danger"
+              fill="outline"
+              (click)="reject(request)"
+              [disabled]="actionRequestId === request.id || rejectingRequestId === request.id"
+            >
               Rechazar
             </ion-button>
           </div>
+
+          <form class="reject-form" *ngIf="rejectingRequestId === request.id" (ngSubmit)="submitReject(request)">
+            <ion-item lines="none" class="field">
+              <ion-label position="stacked">Motivo del rechazo</ion-label>
+              <ion-textarea
+                autoGrow="true"
+                name="rejectReason"
+                [(ngModel)]="rejectReason"
+                (ionBlur)="rejectReasonTouched = true"
+              ></ion-textarea>
+            </ion-item>
+            <ion-note color="danger" *ngIf="rejectReasonTouched && !rejectReason.trim()">
+              Ingresa un motivo para dejar registro de la decision.
+            </ion-note>
+            <div class="reject-actions">
+              <ion-button size="small" type="submit" color="danger" [disabled]="actionRequestId === request.id">
+                Confirmar rechazo
+              </ion-button>
+              <ion-button size="small" type="button" fill="clear" (click)="cancelReject()" [disabled]="actionRequestId === request.id">
+                Cancelar
+              </ion-button>
+            </div>
+          </form>
         </article>
       </div>
 

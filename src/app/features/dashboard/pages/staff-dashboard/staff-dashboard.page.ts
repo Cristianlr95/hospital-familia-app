@@ -29,6 +29,9 @@ export class StaffDashboardPage implements OnInit {
   isLoadingEvents = false;
   isSavingEvent = false;
   actionRequestId: number | null = null;
+  rejectingRequestId: number | null = null;
+  rejectReason = '';
+  rejectReasonTouched = false;
   requestErrorMessage = '';
   eventErrorMessage = '';
   successMessage = '';
@@ -104,8 +107,23 @@ export class StaffDashboardPage implements OnInit {
   }
 
   reject(request: PendingLinkRequestDto): void {
-    const reason = window.prompt('Motivo del rechazo');
-    if (reason === null) {
+    this.rejectingRequestId = request.id;
+    this.rejectReason = '';
+    this.rejectReasonTouched = false;
+    this.requestErrorMessage = '';
+    this.successMessage = '';
+  }
+
+  cancelReject(): void {
+    this.rejectingRequestId = null;
+    this.rejectReason = '';
+    this.rejectReasonTouched = false;
+  }
+
+  submitReject(request: PendingLinkRequestDto): void {
+    this.rejectReasonTouched = true;
+
+    if (!this.rejectReason.trim()) {
       return;
     }
 
@@ -113,10 +131,11 @@ export class StaffDashboardPage implements OnInit {
     this.requestErrorMessage = '';
     this.successMessage = '';
 
-    this.linkingService.rejectRequest(request.id, { reason }).subscribe({
+    this.linkingService.rejectRequest(request.id, { reason: this.rejectReason.trim() }).subscribe({
       next: () => {
         this.successMessage = 'Solicitud rechazada correctamente.';
         this.actionRequestId = null;
+        this.cancelReject();
         this.loadPendingRequests();
       },
       error: (error) => {
