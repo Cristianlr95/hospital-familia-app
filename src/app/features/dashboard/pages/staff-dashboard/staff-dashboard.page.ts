@@ -5,7 +5,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { UserDto } from '../../../../core/models/auth.models';
 import { PatientEventDto, PatientEventStatus, PatientEventType } from '../../../events/models/patient-event.models';
 import { PatientEventService } from '../../../events/services/patient-event.service';
-import { PendingLinkRequestDto } from '../../../linking/models/linking.models';
+import { LinkHistoryItemDto, LinkStatus, PendingLinkRequestDto } from '../../../linking/models/linking.models';
 import { LinkingService } from '../../../linking/services/linking.service';
 
 @Component({
@@ -23,21 +23,26 @@ export class StaffDashboardPage implements OnInit {
 
   user: UserDto | null = this.authService.getCurrentUser();
   pendingRequests: PendingLinkRequestDto[] = [];
+  historyItems: LinkHistoryItemDto[] = [];
   selectedPatientPublicId = '';
   events: PatientEventDto[] = [];
   isLoadingRequests = false;
+  isLoadingHistory = false;
   isLoadingEvents = false;
   isSavingEvent = false;
   actionRequestId: number | null = null;
   rejectingRequestId: number | null = null;
   rejectReason = '';
   rejectReasonTouched = false;
+  historyFilter: LinkStatus | 'ALL' = 'ALL';
   requestErrorMessage = '';
+  historyErrorMessage = '';
   eventErrorMessage = '';
   successMessage = '';
 
   readonly eventTypes: PatientEventType[] = ['SURGERY', 'EXAM', 'VISIT', 'STATE_CHANGE', 'DISCHARGE', 'OTHER'];
   readonly eventStatuses: PatientEventStatus[] = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
+  readonly historyFilters: Array<LinkStatus | 'ALL'> = ['ALL', 'APPROVED', 'REJECTED', 'REVOKED'];
 
   readonly eventForm = this.formBuilder.group({
     patientPublicId: ['', [Validators.required]],
@@ -54,6 +59,7 @@ export class StaffDashboardPage implements OnInit {
   ngOnInit(): void {
     this.refreshSession();
     this.loadPendingRequests();
+    this.loadHistory();
   }
 
   refreshSession(): void {
@@ -98,6 +104,7 @@ export class StaffDashboardPage implements OnInit {
         this.successMessage = 'Solicitud aprobada correctamente.';
         this.actionRequestId = null;
         this.loadPendingRequests();
+        this.loadHistory();
       },
       error: (error) => {
         this.actionRequestId = null;
@@ -137,6 +144,7 @@ export class StaffDashboardPage implements OnInit {
         this.actionRequestId = null;
         this.cancelReject();
         this.loadPendingRequests();
+        this.loadHistory();
       },
       error: (error) => {
         this.actionRequestId = null;
@@ -172,6 +180,34 @@ export class StaffDashboardPage implements OnInit {
         this.eventErrorMessage = error?.error?.message ?? 'No pudimos cargar los eventos del paciente.';
       },
     });
+  }
+
+  loadHistory(): void {
+    if (this.isLoadingHistory) {
+      return;
+    }
+
+    this.isLoadingHistory = true;
+    this.historyErrorMessage = '';
+
+    this.linkingService.getLinkHistory().subscribe({
+      next: (historyItems) => {
+        this.historyItems = historyItems;
+        this.isLoadingHistory = false;
+      },
+      error: (error) => {
+        this.isLoadingHistory = false;
+        this.historyErrorMessage = error?.error?.message ?? 'No pudimos cargar el historial de vinculaciones.';
+      },
+    });
+  }
+
+  filteredHistory(): LinkHistoryItemDto[] {
+    if (this.historyFilter === 'ALL') {
+      return this.historyItems;
+    }
+
+    return this.historyItems.filter((item) => item.status === this.historyFilter);
   }
 
   createEvent(): void {
@@ -243,6 +279,17 @@ export class StaffDashboardPage implements OnInit {
     };
 
     return labels[type] ?? type;
+  }
+
+  linkStatusLabel(status: LinkStatus): string {
+    const labels: Record<LinkStatus, string> = {
+      PENDING: 'Pendiente',
+      APPROVED: 'Aprobada',
+      REJECTED: 'Rechazada',
+      REVOKED: 'Revocada',
+    };
+
+    return labels[status] ?? status;
   }
 
   logout(): void {

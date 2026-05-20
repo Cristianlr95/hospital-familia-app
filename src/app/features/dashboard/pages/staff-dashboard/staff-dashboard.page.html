@@ -87,6 +87,47 @@
       <p class="error-message inline-error" *ngIf="requestErrorMessage">{{ requestErrorMessage }}</p>
     </section>
 
+    <section class="panel history-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Historial</p>
+          <h2>Decisiones registradas</h2>
+        </div>
+        <div class="panel-controls">
+          <ion-select interface="popover" [(ngModel)]="historyFilter" aria-label="Filtrar historial">
+            <ion-select-option *ngFor="let filter of historyFilters" [value]="filter">
+              {{ filter === 'ALL' ? 'Todo' : linkStatusLabel(filter) }}
+            </ion-select-option>
+          </ion-select>
+          <ion-button fill="clear" size="small" (click)="loadHistory()" [disabled]="isLoadingHistory">
+            Actualizar
+          </ion-button>
+        </div>
+      </div>
+
+      <ion-spinner *ngIf="isLoadingHistory" name="crescent"></ion-spinner>
+      <p *ngIf="!isLoadingHistory && !filteredHistory().length">
+        No hay decisiones registradas para el filtro seleccionado.
+      </p>
+
+      <div class="history-list" *ngIf="filteredHistory().length">
+        <article class="history-row" *ngFor="let item of filteredHistory()">
+          <div>
+            <p class="eyebrow">{{ linkStatusLabel(item.status) }} - {{ (item.decidedAt || item.requestedAt) | date: 'short' }}</p>
+            <h3>{{ item.patientDisplayName }}</h3>
+            <p>{{ item.tutorFullName }} - {{ item.tutorEmail }}</p>
+            <p *ngIf="item.decidedByFullName">Decision por {{ item.decidedByFullName }} - {{ item.decidedByEmail }}</p>
+            <p *ngIf="item.decisionReason" class="history-reason">{{ item.decisionReason }}</p>
+            <button class="text-action" type="button" (click)="selectPatient(item.patientPublicId)">
+              Ver eventos del paciente
+            </button>
+          </div>
+        </article>
+      </div>
+
+      <p class="error-message inline-error" *ngIf="historyErrorMessage">{{ historyErrorMessage }}</p>
+    </section>
+
     <section class="panel event-form-panel">
       <p class="eyebrow">Calendario</p>
       <h2>Crear evento visible</h2>

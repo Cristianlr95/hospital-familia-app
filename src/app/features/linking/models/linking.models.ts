@@ -29,6 +29,20 @@ export interface PendingLinkRequestDto {
   patientDisplayName: string;
 }
 
+export interface LinkHistoryItemDto {
+  id: number;
+  status: LinkStatus;
+  requestedAt: string;
+  decidedAt?: string | null;
+  decisionReason?: string | null;
+  tutorEmail: string;
+  tutorFullName: string;
+  patientPublicId: string;
+  patientDisplayName: string;
+  decidedByEmail?: string | null;
+  decidedByFullName?: string | null;
+}
+
 export interface LinkDecisionRequest {
   reason?: string | null;
 }
