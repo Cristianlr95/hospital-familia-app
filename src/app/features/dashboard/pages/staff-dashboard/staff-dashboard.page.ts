@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
-import { UserDto } from '../../../../core/models/auth.models';
+import { AuthSessionItemDto, UserDto } from '../../../../core/models/auth.models';
 import { ActivityFeedItemDto } from '../../../activity/models/activity-feed.models';
 import { ActivityFeedService } from '../../../activity/services/activity-feed.service';
 import { PatientEventDto, PatientEventStatus, PatientEventType } from '../../../events/models/patient-event.models';
@@ -26,16 +26,20 @@ export class StaffDashboardPage implements OnInit {
 
   user: UserDto | null = this.authService.getCurrentUser();
   activityFeed: ActivityFeedItemDto[] = [];
+  sessions: AuthSessionItemDto[] = [];
   pendingRequests: PendingLinkRequestDto[] = [];
   historyItems: LinkHistoryItemDto[] = [];
   selectedPatientPublicId = '';
   events: PatientEventDto[] = [];
   isLoadingActivity = false;
+  isLoadingSessions = false;
   isLoadingRequests = false;
   isLoadingHistory = false;
   isLoadingEvents = false;
   isSavingEvent = false;
+  isRevokingOtherSessions = false;
   actionRequestId: number | null = null;
+  sessionActionId: string | null = null;
   rejectingRequestId: number | null = null;
   rejectReason = '';
   rejectReasonTouched = false;
@@ -44,6 +48,7 @@ export class StaffDashboardPage implements OnInit {
   historyErrorMessage = '';
   eventErrorMessage = '';
   activityErrorMessage = '';
+  sessionErrorMessage = '';
   successMessage = '';
 
   readonly eventTypes: PatientEventType[] = ['SURGERY', 'EXAM', 'VISIT', 'STATE_CHANGE', 'DISCHARGE', 'OTHER'];
@@ -65,6 +70,7 @@ export class StaffDashboardPage implements OnInit {
   ngOnInit(): void {
     this.refreshSession();
     this.loadActivityFeed();
+    this.loadSessions();
     this.loadPendingRequests();
     this.loadHistory();
   }
@@ -118,6 +124,26 @@ export class StaffDashboardPage implements OnInit {
       error: (error) => {
         this.isLoadingActivity = false;
         this.activityErrorMessage = error?.error?.message ?? 'No pudimos cargar la actividad del staff.';
+      },
+    });
+  }
+
+  loadSessions(): void {
+    if (this.isLoadingSessions) {
+      return;
+    }
+
+    this.isLoadingSessions = true;
+    this.sessionErrorMessage = '';
+
+    this.authService.getSessions().subscribe({
+      next: (sessions) => {
+        this.sessions = sessions;
+        this.isLoadingSessions = false;
+      },
+      error: (error) => {
+        this.isLoadingSessions = false;
+        this.sessionErrorMessage = error?.error?.message ?? 'No pudimos cargar las sesiones activas.';
       },
     });
   }
@@ -348,6 +374,48 @@ export class StaffDashboardPage implements OnInit {
       return 'warning';
     }
     return 'medium';
+  }
+
+  revokeSession(session: AuthSessionItemDto): void {
+    this.sessionActionId = session.sessionId;
+    this.sessionErrorMessage = '';
+
+    this.authService.revokeSession(session.sessionId).subscribe({
+      next: () => {
+        if (session.current) {
+          this.authService.clearSession();
+          void this.router.navigate(['/auth/login']);
+          return;
+        }
+
+        this.sessionActionId = null;
+        this.loadSessions();
+      },
+      error: (error) => {
+        this.sessionActionId = null;
+        this.sessionErrorMessage = error?.error?.message ?? 'No pudimos revocar la sesion seleccionada.';
+      },
+    });
+  }
+
+  revokeOtherSessions(): void {
+    if (this.isRevokingOtherSessions) {
+      return;
+    }
+
+    this.isRevokingOtherSessions = true;
+    this.sessionErrorMessage = '';
+
+    this.authService.revokeOtherSessions().subscribe({
+      next: () => {
+        this.isRevokingOtherSessions = false;
+        this.loadSessions();
+      },
+      error: (error) => {
+        this.isRevokingOtherSessions = false;
+        this.sessionErrorMessage = error?.error?.message ?? 'No pudimos cerrar las otras sesiones.';
+      },
+    });
   }
 
   logout(): void {

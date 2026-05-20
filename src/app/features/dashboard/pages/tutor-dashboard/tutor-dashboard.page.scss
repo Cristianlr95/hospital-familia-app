@@ -77,7 +77,8 @@ dd {
 .request-list,
 .status-list,
 .event-list,
-.activity-list {
+.activity-list,
+.session-list {
   display: grid;
   gap: 0.75rem;
   margin-top: 0.8rem;
@@ -86,7 +87,8 @@ dd {
 .patient-row,
 .request-row,
 .event-row,
-.activity-row {
+.activity-row,
+.session-row {
   align-items: flex-start;
   background: #f9fafb;
   border: 1px solid var(--hf-soft-border);
@@ -101,7 +103,8 @@ dd {
 .request-row h3,
 .status-row h3,
 .event-row h3,
-.activity-row h3 {
+.activity-row h3,
+.session-row h3 {
   color: var(--hf-text);
   font-size: 1rem;
   font-weight: 900;
@@ -123,6 +126,15 @@ dd {
   display: flex;
   gap: 0.8rem;
   justify-content: space-between;
+}
+
+.panel-actions,
+.session-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
 }
 
 dl {
@@ -187,6 +199,10 @@ dd {
   border-color: #fed7aa;
 }
 
+.sessions-panel {
+  background: #f8fafc;
+}
+
 .error-message {
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -239,6 +255,7 @@ dd {
   .request-row,
   .event-row,
   .activity-row,
+  .session-row,
   .status-row-header {
     display: grid;
     grid-template-columns: 1fr;

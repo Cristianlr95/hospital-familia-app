@@ -137,8 +137,15 @@
     </section>
 
     <section class="panel">
-      <p class="eyebrow">Cuenta</p>
-      <h2>Sesion validada</h2>
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Cuenta</p>
+          <h2>Sesion validada</h2>
+        </div>
+        <ion-button fill="clear" size="small" (click)="refreshSession()" [disabled]="isRefreshing">
+          Validar sesion
+        </ion-button>
+      </div>
       <dl>
         <div>
           <dt>Email</dt>
@@ -149,9 +156,58 @@
           <dd>{{ user?.roles?.join(', ') }}</dd>
         </div>
       </dl>
-      <ion-button fill="clear" size="small" (click)="refreshSession()" [disabled]="isRefreshing">
-        Validar sesion
-      </ion-button>
+    </section>
+
+    <section class="panel sessions-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Seguridad</p>
+          <h2>Sesiones activas</h2>
+        </div>
+        <div class="panel-actions">
+          <ion-button fill="clear" size="small" (click)="loadSessions()" [disabled]="isLoadingSessions">
+            Actualizar
+          </ion-button>
+          <ion-button fill="outline" size="small" color="warning" (click)="revokeOtherSessions()" [disabled]="isRevokingOtherSessions">
+            Cerrar otras
+          </ion-button>
+        </div>
+      </div>
+
+      <ion-spinner *ngIf="isLoadingSessions" name="crescent"></ion-spinner>
+      <p *ngIf="!isLoadingSessions && !sessions.length">
+        No hay sesiones registradas para esta cuenta.
+      </p>
+
+      <div class="session-list" *ngIf="sessions.length">
+        <article class="session-row" *ngFor="let session of sessions">
+          <div>
+            <p class="eyebrow">
+              {{ session.current ? 'Sesion actual' : 'Sesion registrada' }} - {{ session.createdAt | date: 'short' }}
+            </p>
+            <h3>{{ session.current ? 'Este dispositivo' : 'Otro acceso' }}</h3>
+            <p>Expira {{ session.expiresAt | date: 'short' }}</p>
+            <p *ngIf="session.revokedAt">Revocada {{ session.revokedAt | date: 'short' }}</p>
+          </div>
+          <div class="session-actions">
+            <ion-badge [color]="session.revoked ? 'danger' : (session.current ? 'success' : 'medium')">
+              {{ session.revoked ? 'Revocada' : (session.current ? 'Actual' : 'Activa') }}
+            </ion-badge>
+            <ion-button
+              *ngIf="!session.revoked"
+              size="small"
+              fill="outline"
+              color="danger"
+              (click)="revokeSession(session)"
+              [disabled]="sessionActionId === session.sessionId"
+            >
+              {{ session.current ? 'Cerrar aqui' : 'Revocar' }}
+            </ion-button>
+          </div>
+        </article>
+      </div>
+
+      <p class="error-message inline-error" *ngIf="sessionErrorMessage">{{ sessionErrorMessage }}</p>
     </section>
 
     <section class="panel calm-panel">

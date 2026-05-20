@@ -40,6 +40,20 @@ export interface LogoutRequest {
   refreshToken: string;
 }
 
+export interface AuthSessionItemDto {
+  sessionId: string;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt: string;
+  revokedAt?: string | null;
+  revoked: boolean;
+  current: boolean;
+}
+
+export interface RevokeOtherSessionsRequest {
+  refreshToken: string;
+}
+
 export interface AuthSession {
   accessToken: string;
   refreshToken: string;
