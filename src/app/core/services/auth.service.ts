@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, map, of, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, finalize, map, of, shareReplay, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   ApiResponse,
@@ -21,6 +21,7 @@ export class AuthService {
   private readonly storage = inject(StorageService);
   private readonly apiUrl = environment.apiUrl;
   private readonly currentUserSubject = new BehaviorSubject<UserDto | null>(this.storage.getUser());
+  private refreshRequest$: Observable<LoginResponse> | null = null;
 
   readonly currentUser$ = this.currentUserSubject.asObservable();
 
@@ -42,6 +43,34 @@ export class AuthService {
       map((response) => response.data),
       tap((user) => this.currentUserSubject.next(user)),
     );
+  }
+
+  refreshSession(): Observable<LoginResponse> {
+    const refreshToken = this.storage.getRefreshToken();
+    if (!refreshToken) {
+      this.clearLocalSession();
+      return throwError(() => new Error('No hay refresh token disponible'));
+    }
+
+    if (this.refreshRequest$) {
+      return this.refreshRequest$;
+    }
+
+    const request = { refreshToken };
+    this.refreshRequest$ = this.http.post<ApiResponse<LoginResponse>>(`${this.apiUrl}/auth/refresh`, request).pipe(
+      map((response) => response.data),
+      tap((data) => this.storeLoginResponse(data)),
+      finalize(() => {
+        this.refreshRequest$ = null;
+      }),
+      shareReplay(1),
+      catchError((error) => {
+        this.clearLocalSession();
+        return throwError(() => error);
+      }),
+    );
+
+    return this.refreshRequest$;
   }
 
   getSessions(): Observable<AuthSessionItemDto[]> {
