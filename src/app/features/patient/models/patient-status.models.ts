@@ -7,3 +7,10 @@ export interface PatientStatusDto {
   summary?: string | null;
   updatedAt: string;
 }
+
+export interface PatientStatusUpdateRequest {
+  careStatus: string;
+  currentService: string | null;
+  currentLocation: string | null;
+  summary: string | null;
+}
