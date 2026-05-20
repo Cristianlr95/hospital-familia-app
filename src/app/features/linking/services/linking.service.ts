@@ -5,6 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/auth.models';
 import {
   LinkDecisionRequest,
+  LinkHistoryItemDto,
   LinkRequestCreateRequest,
   LinkRequestDto,
   LinkedPatientDto,
@@ -36,6 +37,12 @@ export class LinkingService {
 
   getPendingRequests(): Observable<PendingLinkRequestDto[]> {
     return this.http.get<ApiResponse<PendingLinkRequestDto[]>>(`${this.apiUrl}/pending`).pipe(
+      map((response) => response.data),
+    );
+  }
+
+  getLinkHistory(): Observable<LinkHistoryItemDto[]> {
+    return this.http.get<ApiResponse<LinkHistoryItemDto[]>>(`${this.apiUrl}/history`).pipe(
       map((response) => response.data),
     );
   }
