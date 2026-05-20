@@ -105,6 +105,37 @@
       </div>
     </section>
 
+    <section class="panel activity-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Actividad</p>
+          <h2>Historial reciente</h2>
+        </div>
+        <ion-button fill="clear" size="small" (click)="loadActivityFeed()" [disabled]="isLoadingActivity">
+          Actualizar
+        </ion-button>
+      </div>
+
+      <ion-spinner *ngIf="isLoadingActivity" name="crescent"></ion-spinner>
+      <p *ngIf="!isLoadingActivity && !activityFeed.length">
+        Aun no hay actividad visible para tu cuenta.
+      </p>
+
+      <div class="activity-list" *ngIf="activityFeed.length">
+        <article class="activity-row" *ngFor="let item of activityFeed">
+          <div>
+            <p class="eyebrow">{{ activityKindLabel(item.kind) }} - {{ item.occurredAt | date: 'short' }}</p>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.patientDisplayName }}</p>
+            <p>{{ item.message }}</p>
+          </div>
+          <ion-badge *ngIf="item.status" [color]="activityStatusColor(item)">{{ item.status }}</ion-badge>
+        </article>
+      </div>
+
+      <p class="error-message inline-error" *ngIf="activityErrorMessage">{{ activityErrorMessage }}</p>
+    </section>
+
     <section class="panel">
       <p class="eyebrow">Cuenta</p>
       <h2>Sesion validada</h2>
