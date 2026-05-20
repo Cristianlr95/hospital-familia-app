@@ -2,7 +2,17 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse, AuthSession, LoginRequest, LoginResponse, LogoutRequest, RegisterRequest, UserDto } from '../models/auth.models';
+import {
+  ApiResponse,
+  AuthSession,
+  AuthSessionItemDto,
+  LoginRequest,
+  LoginResponse,
+  LogoutRequest,
+  RegisterRequest,
+  RevokeOtherSessionsRequest,
+  UserDto,
+} from '../models/auth.models';
 import { StorageService } from './storage.service';
 
 @Injectable({ providedIn: 'root' })
@@ -34,6 +44,32 @@ export class AuthService {
     );
   }
 
+  getSessions(): Observable<AuthSessionItemDto[]> {
+    const refreshToken = this.storage.getRefreshToken();
+    const headers = refreshToken ? { 'X-Refresh-Token': refreshToken } : undefined;
+    return this.http.get<ApiResponse<AuthSessionItemDto[]>>(`${this.apiUrl}/auth/sessions`, { headers }).pipe(
+      map((response) => response.data),
+    );
+  }
+
+  revokeSession(sessionId: string): Observable<void> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/auth/sessions/${sessionId}/revoke`, {}).pipe(
+      map(() => void 0),
+    );
+  }
+
+  revokeOtherSessions(): Observable<void> {
+    const refreshToken = this.storage.getRefreshToken();
+    if (!refreshToken) {
+      return of(void 0);
+    }
+
+    const request: RevokeOtherSessionsRequest = { refreshToken };
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/auth/sessions/revoke-others`, request).pipe(
+      map(() => void 0),
+    );
+  }
+
   logout(): Observable<void> {
     const refreshToken = this.storage.getRefreshToken();
     if (!refreshToken) {
@@ -62,6 +98,10 @@ export class AuthService {
 
   getCurrentUser(): UserDto | null {
     return this.currentUserSubject.value;
+  }
+
+  clearSession(): void {
+    this.clearLocalSession();
   }
 
   private storeLoginResponse(data: LoginResponse): void {
