@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, map, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse, AuthSession, LoginRequest, LoginResponse, RegisterRequest, UserDto } from '../models/auth.models';
+import { ApiResponse, AuthSession, LoginRequest, LoginResponse, LogoutRequest, RegisterRequest, UserDto } from '../models/auth.models';
 import { StorageService } from './storage.service';
 
 @Injectable({ providedIn: 'root' })
@@ -34,9 +34,22 @@ export class AuthService {
     );
   }
 
-  logout(): void {
-    this.storage.clearSession();
-    this.currentUserSubject.next(null);
+  logout(): Observable<void> {
+    const refreshToken = this.storage.getRefreshToken();
+    if (!refreshToken) {
+      this.clearLocalSession();
+      return of(void 0);
+    }
+
+    const request: LogoutRequest = { refreshToken };
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/auth/logout`, request).pipe(
+      tap(() => this.clearLocalSession()),
+      map(() => void 0),
+      catchError(() => {
+        this.clearLocalSession();
+        return of(void 0);
+      }),
+    );
   }
 
   isAuthenticated(): boolean {
@@ -60,5 +73,10 @@ export class AuthService {
 
     this.storage.saveSession(session);
     this.currentUserSubject.next(data.user);
+  }
+
+  private clearLocalSession(): void {
+    this.storage.clearSession();
+    this.currentUserSubject.next(null);
   }
 }

@@ -57,8 +57,9 @@ export class TutorDashboardPage implements OnInit {
       error: () => {
         this.isRefreshing = false;
         this.errorMessage = 'Tu sesion no pudo validarse. Inicia sesion nuevamente.';
-        this.authService.logout();
-        void this.router.navigate(['/auth/login']);
+        this.authService.logout().subscribe(() => {
+          void this.router.navigate(['/auth/login']);
+        });
       },
     });
   }
@@ -143,7 +144,8 @@ export class TutorDashboardPage implements OnInit {
   }
 
   logout(): void {
-    this.authService.logout();
-    void this.router.navigate(['/auth/login']);
+    this.authService.logout().subscribe(() => {
+      void this.router.navigate(['/auth/login']);
+    });
   }
 }

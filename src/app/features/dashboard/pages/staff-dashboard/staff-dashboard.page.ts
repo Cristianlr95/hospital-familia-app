@@ -68,8 +68,9 @@ export class StaffDashboardPage implements OnInit {
         this.user = user;
       },
       error: () => {
-        this.authService.logout();
-        void this.router.navigate(['/auth/login']);
+        this.authService.logout().subscribe(() => {
+          void this.router.navigate(['/auth/login']);
+        });
       },
     });
   }
@@ -293,8 +294,9 @@ export class StaffDashboardPage implements OnInit {
   }
 
   logout(): void {
-    this.authService.logout();
-    void this.router.navigate(['/auth/login']);
+    this.authService.logout().subscribe(() => {
+      void this.router.navigate(['/auth/login']);
+    });
   }
 
   private cleanOptional(value: string | null | undefined): string | null {

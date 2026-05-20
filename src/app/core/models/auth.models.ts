@@ -36,6 +36,10 @@ export interface LoginResponse {
   user: UserDto;
 }
 
+export interface LogoutRequest {
+  refreshToken: string;
+}
+
 export interface AuthSession {
   accessToken: string;
   refreshToken: string;
