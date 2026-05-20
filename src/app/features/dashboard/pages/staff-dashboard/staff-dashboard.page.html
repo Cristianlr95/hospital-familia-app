@@ -2,7 +2,6 @@
   <ion-toolbar>
     <ion-title>Hospital Familia</ion-title>
     <ion-buttons slot="end">
-      <ion-button routerLink="/dashboard/tutor">Tutor</ion-button>
       <ion-button (click)="logout()">Salir</ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -14,6 +13,9 @@
     <h1>Gestion de solicitudes y eventos familiares.</h1>
     <p class="hero-copy">
       Revisa vinculaciones pendientes, aprueba accesos autorizados y administra el calendario visible para tutores.
+    </p>
+    <p class="staff-context" *ngIf="user">
+      Sesion staff activa: {{ user.firstName }} {{ user.lastName }} - {{ user.email }}
     </p>
   </section>
 
@@ -221,6 +223,9 @@
           <ion-label position="stacked">ID publico del paciente</ion-label>
           <ion-input formControlName="patientPublicId"></ion-input>
         </ion-item>
+        <ion-note color="danger" *ngIf="isFieldInvalid('patientPublicId')">
+          Selecciona una solicitud o ingresa el ID publico del paciente.
+        </ion-note>
 
         <div class="form-grid">
           <ion-item lines="none" class="field">
@@ -237,11 +242,17 @@
             <ion-input type="datetime-local" formControlName="scheduledAt"></ion-input>
           </ion-item>
         </div>
+        <ion-note color="danger" *ngIf="isFieldInvalid('scheduledAt')">
+          Indica fecha y hora del evento.
+        </ion-note>
 
         <ion-item lines="none" class="field">
           <ion-label position="stacked">Titulo</ion-label>
           <ion-input formControlName="title"></ion-input>
         </ion-item>
+        <ion-note color="danger" *ngIf="isFieldInvalid('title')">
+          El titulo es obligatorio y debe tener maximo 140 caracteres.
+        </ion-note>
 
         <ion-item lines="none" class="field">
           <ion-label position="stacked">Descripcion</ion-label>
@@ -277,6 +288,53 @@
           <span *ngIf="!isSavingEvent">Crear evento</span>
         </ion-button>
       </form>
+      <p class="error-message inline-error" *ngIf="eventFormErrorMessage">{{ eventFormErrorMessage }}</p>
+    </section>
+
+    <section class="panel status-form-panel">
+      <p class="eyebrow">Estado visible</p>
+      <h2>Actualizar resumen familiar</h2>
+
+      <form [formGroup]="statusForm" (ngSubmit)="updateVisibleStatus()">
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">ID publico del paciente</ion-label>
+          <ion-input formControlName="patientPublicId"></ion-input>
+        </ion-item>
+        <ion-note color="danger" *ngIf="isStatusFieldInvalid('patientPublicId')">
+          Selecciona una solicitud o ingresa el ID publico del paciente.
+        </ion-note>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Estado visible</ion-label>
+          <ion-input formControlName="careStatus" placeholder="Estable, bajo vigilancia, en procedimiento"></ion-input>
+        </ion-item>
+        <ion-note color="danger" *ngIf="isStatusFieldInvalid('careStatus')">
+          El estado visible es obligatorio.
+        </ion-note>
+
+        <div class="form-grid">
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Servicio</ion-label>
+            <ion-input formControlName="currentService"></ion-input>
+          </ion-item>
+
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Ubicacion</ion-label>
+            <ion-input formControlName="currentLocation"></ion-input>
+          </ion-item>
+        </div>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Resumen para familia</ion-label>
+          <ion-textarea autoGrow="true" formControlName="summary"></ion-textarea>
+        </ion-item>
+
+        <ion-button expand="block" type="submit" [disabled]="isSavingStatus">
+          <ion-spinner *ngIf="isSavingStatus" name="crescent"></ion-spinner>
+          <span *ngIf="!isSavingStatus">Actualizar estado</span>
+        </ion-button>
+      </form>
+      <p class="error-message inline-error" *ngIf="statusErrorMessage">{{ statusErrorMessage }}</p>
     </section>
 
     <section class="panel events-panel">

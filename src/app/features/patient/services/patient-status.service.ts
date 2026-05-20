@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/auth.models';
-import { PatientStatusDto } from '../models/patient-status.models';
+import { PatientStatusDto, PatientStatusUpdateRequest } from '../models/patient-status.models';
 
 @Injectable({ providedIn: 'root' })
 export class PatientStatusService {
@@ -18,6 +18,12 @@ export class PatientStatusService {
 
   getPatientStatus(patientPublicId: string): Observable<PatientStatusDto> {
     return this.http.get<ApiResponse<PatientStatusDto>>(`${this.apiUrl}/${patientPublicId}/status`).pipe(
+      map((response) => response.data),
+    );
+  }
+
+  updatePatientStatusForStaff(patientPublicId: string, request: PatientStatusUpdateRequest): Observable<PatientStatusDto> {
+    return this.http.put<ApiResponse<PatientStatusDto>>(`${this.apiUrl}/${patientPublicId}/status`, request).pipe(
       map((response) => response.data),
     );
   }

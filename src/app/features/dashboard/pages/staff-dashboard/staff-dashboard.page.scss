@@ -44,6 +44,18 @@
   max-width: 42rem;
 }
 
+.staff-context {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--hf-radius);
+  color: var(--hf-text);
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: 800;
+  margin: 1rem 0 0;
+  padding: 0.65rem 0.8rem;
+}
+
 .staff-grid {
   display: grid;
   gap: 1rem;
@@ -210,6 +222,16 @@
   margin-top: 0.5rem;
 }
 
+.status-form-panel {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.status-form-panel ion-button {
+  --border-radius: var(--hf-radius);
+  margin-top: 0.5rem;
+}
+
 .error-message,
 .success-message {
   border-radius: var(--hf-radius);
@@ -266,9 +288,14 @@
     grid-row: 1;
   }
 
-  .events-panel {
+  .status-form-panel {
     grid-column: 2;
     grid-row: 2;
+  }
+
+  .events-panel {
+    grid-column: 2;
+    grid-row: 3;
   }
 
   .form-grid {
