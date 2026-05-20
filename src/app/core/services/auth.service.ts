@@ -74,9 +74,7 @@ export class AuthService {
   }
 
   getSessions(): Observable<AuthSessionItemDto[]> {
-    const refreshToken = this.storage.getRefreshToken();
-    const headers = refreshToken ? { 'X-Refresh-Token': refreshToken } : undefined;
-    return this.http.get<ApiResponse<AuthSessionItemDto[]>>(`${this.apiUrl}/auth/sessions`, { headers }).pipe(
+    return this.http.get<ApiResponse<AuthSessionItemDto[]>>(`${this.apiUrl}/auth/sessions`).pipe(
       map((response) => response.data),
     );
   }
@@ -123,6 +121,10 @@ export class AuthService {
 
   getAccessToken(): string | null {
     return this.storage.getAccessToken();
+  }
+
+  getRefreshToken(): string | null {
+    return this.storage.getRefreshToken();
   }
 
   getCurrentUser(): UserDto | null {

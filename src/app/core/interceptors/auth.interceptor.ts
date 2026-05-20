@@ -17,11 +17,7 @@ export class AuthInterceptor implements HttpInterceptor {
       return next.handle(request);
     }
 
-    const authorizedRequest = request.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const authorizedRequest = this.withAuthHeaders(request, token);
 
     return next.handle(authorizedRequest).pipe(
       catchError((error) => {
@@ -30,12 +26,9 @@ export class AuthInterceptor implements HttpInterceptor {
         }
 
         return this.authService.refreshSession().pipe(
-          switchMap((response) => next.handle(request.clone({
+          switchMap((response) => next.handle(this.withAuthHeaders(request.clone({
             context: request.context.set(REFRESH_RETRY_CONTEXT, true),
-            setHeaders: {
-              Authorization: `Bearer ${response.accessToken}`,
-            },
-          }))),
+          }), response.accessToken))),
           catchError((refreshError) => {
             this.authService.clearSession();
             return throwError(() => refreshError);
@@ -47,5 +40,18 @@ export class AuthInterceptor implements HttpInterceptor {
 
   private isRefreshEndpoint(request: HttpRequest<unknown>): boolean {
     return request.url.includes('/auth/refresh');
+  }
+
+  private withAuthHeaders(request: HttpRequest<unknown>, accessToken: string): HttpRequest<unknown> {
+    const refreshToken = this.authService.getRefreshToken();
+    const setHeaders: Record<string, string> = {
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    if (refreshToken && request.url.includes('/auth/sessions')) {
+      setHeaders['X-Refresh-Token'] = refreshToken;
+    }
+
+    return request.clone({ setHeaders });
   }
 }
