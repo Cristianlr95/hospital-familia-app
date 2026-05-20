@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { forkJoin, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserDto } from '../../../../core/models/auth.models';
+import { ActivityFeedItemDto } from '../../../activity/models/activity-feed.models';
+import { ActivityFeedService } from '../../../activity/services/activity-feed.service';
 import { LinkingService } from '../../../linking/services/linking.service';
 import { LinkRequestDto, LinkedPatientDto } from '../../../linking/models/linking.models';
 import { PatientEventDto } from '../../../events/models/patient-event.models';
@@ -18,25 +20,30 @@ import { PatientStatusService } from '../../../patient/services/patient-status.s
 })
 export class TutorDashboardPage implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly activityFeedService = inject(ActivityFeedService);
   private readonly linkingService = inject(LinkingService);
   private readonly patientStatusService = inject(PatientStatusService);
   private readonly patientEventService = inject(PatientEventService);
   private readonly router = inject(Router);
 
   user: UserDto | null = this.authService.getCurrentUser();
+  activityFeed: ActivityFeedItemDto[] = [];
   linkedPatients: LinkedPatientDto[] = [];
   linkRequests: LinkRequestDto[] = [];
   patientStatuses: PatientStatusDto[] = [];
   upcomingEvents: PatientEventDto[] = [];
   isRefreshing = false;
+  isLoadingActivity = false;
   isLoadingLinks = false;
   isLoadingPatientOverview = false;
   errorMessage = '';
+  activityErrorMessage = '';
   linkErrorMessage = '';
   patientOverviewErrorMessage = '';
 
   ngOnInit(): void {
     this.refreshSession();
+    this.loadActivityFeed();
     this.loadLinkingSummary();
     this.loadPatientOverview();
   }
@@ -84,6 +91,26 @@ export class TutorDashboardPage implements OnInit {
       error: (error) => {
         this.isLoadingLinks = false;
         this.linkErrorMessage = error?.error?.message ?? 'No pudimos cargar tus vinculaciones.';
+      },
+    });
+  }
+
+  loadActivityFeed(): void {
+    if (this.isLoadingActivity) {
+      return;
+    }
+
+    this.isLoadingActivity = true;
+    this.activityErrorMessage = '';
+
+    this.activityFeedService.getTutorFeed().subscribe({
+      next: (items) => {
+        this.activityFeed = items;
+        this.isLoadingActivity = false;
+      },
+      error: (error) => {
+        this.isLoadingActivity = false;
+        this.activityErrorMessage = error?.error?.message ?? 'No pudimos cargar la actividad reciente.';
       },
     });
   }
@@ -137,6 +164,32 @@ export class TutorDashboardPage implements OnInit {
     };
 
     return labels[type] ?? type;
+  }
+
+  activityKindLabel(kind: ActivityFeedItemDto['kind']): string {
+    const labels: Record<ActivityFeedItemDto['kind'], string> = {
+      LINK: 'Vinculacion',
+      LINK_PENDING: 'Pendiente',
+      LINK_HISTORY: 'Historial',
+      EVENT: 'Evento',
+      STATUS: 'Estado',
+    };
+
+    return labels[kind] ?? kind;
+  }
+
+  activityStatusColor(item: ActivityFeedItemDto): string {
+    const status = item.status ?? '';
+    if (status === 'APPROVED' || status === 'COMPLETED') {
+      return 'success';
+    }
+    if (status === 'REJECTED' || status === 'CANCELLED' || status === 'REVOKED') {
+      return 'danger';
+    }
+    if (status === 'IN_PROGRESS') {
+      return 'warning';
+    }
+    return 'medium';
   }
 
   goToLinkPatient(): void {

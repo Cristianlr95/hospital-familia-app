@@ -3,6 +3,8 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserDto } from '../../../../core/models/auth.models';
+import { ActivityFeedItemDto } from '../../../activity/models/activity-feed.models';
+import { ActivityFeedService } from '../../../activity/services/activity-feed.service';
 import { PatientEventDto, PatientEventStatus, PatientEventType } from '../../../events/models/patient-event.models';
 import { PatientEventService } from '../../../events/services/patient-event.service';
 import { LinkHistoryItemDto, LinkStatus, PendingLinkRequestDto } from '../../../linking/models/linking.models';
@@ -16,16 +18,19 @@ import { LinkingService } from '../../../linking/services/linking.service';
 })
 export class StaffDashboardPage implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly activityFeedService = inject(ActivityFeedService);
   private readonly linkingService = inject(LinkingService);
   private readonly eventService = inject(PatientEventService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
 
   user: UserDto | null = this.authService.getCurrentUser();
+  activityFeed: ActivityFeedItemDto[] = [];
   pendingRequests: PendingLinkRequestDto[] = [];
   historyItems: LinkHistoryItemDto[] = [];
   selectedPatientPublicId = '';
   events: PatientEventDto[] = [];
+  isLoadingActivity = false;
   isLoadingRequests = false;
   isLoadingHistory = false;
   isLoadingEvents = false;
@@ -38,6 +43,7 @@ export class StaffDashboardPage implements OnInit {
   requestErrorMessage = '';
   historyErrorMessage = '';
   eventErrorMessage = '';
+  activityErrorMessage = '';
   successMessage = '';
 
   readonly eventTypes: PatientEventType[] = ['SURGERY', 'EXAM', 'VISIT', 'STATE_CHANGE', 'DISCHARGE', 'OTHER'];
@@ -58,6 +64,7 @@ export class StaffDashboardPage implements OnInit {
 
   ngOnInit(): void {
     this.refreshSession();
+    this.loadActivityFeed();
     this.loadPendingRequests();
     this.loadHistory();
   }
@@ -95,6 +102,26 @@ export class StaffDashboardPage implements OnInit {
     });
   }
 
+  loadActivityFeed(): void {
+    if (this.isLoadingActivity) {
+      return;
+    }
+
+    this.isLoadingActivity = true;
+    this.activityErrorMessage = '';
+
+    this.activityFeedService.getStaffFeed().subscribe({
+      next: (items) => {
+        this.activityFeed = items;
+        this.isLoadingActivity = false;
+      },
+      error: (error) => {
+        this.isLoadingActivity = false;
+        this.activityErrorMessage = error?.error?.message ?? 'No pudimos cargar la actividad del staff.';
+      },
+    });
+  }
+
   approve(request: PendingLinkRequestDto): void {
     this.actionRequestId = request.id;
     this.requestErrorMessage = '';
@@ -106,6 +133,7 @@ export class StaffDashboardPage implements OnInit {
         this.actionRequestId = null;
         this.loadPendingRequests();
         this.loadHistory();
+        this.loadActivityFeed();
       },
       error: (error) => {
         this.actionRequestId = null;
@@ -146,6 +174,7 @@ export class StaffDashboardPage implements OnInit {
         this.cancelReject();
         this.loadPendingRequests();
         this.loadHistory();
+        this.loadActivityFeed();
       },
       error: (error) => {
         this.actionRequestId = null;
@@ -237,6 +266,7 @@ export class StaffDashboardPage implements OnInit {
         this.isSavingEvent = false;
         this.successMessage = 'Evento creado correctamente.';
         this.loadEvents(raw.patientPublicId ?? '');
+        this.loadActivityFeed();
         this.eventForm.patchValue({
           title: '',
           description: '',
@@ -262,6 +292,7 @@ export class StaffDashboardPage implements OnInit {
       next: (updated) => {
         this.events = this.events.map((current) => current.id === updated.id ? updated : current);
         this.successMessage = 'Estado de evento actualizado.';
+        this.loadActivityFeed();
       },
       error: (error) => {
         this.eventErrorMessage = error?.error?.message ?? 'No pudimos actualizar el estado del evento.';
@@ -291,6 +322,32 @@ export class StaffDashboardPage implements OnInit {
     };
 
     return labels[status] ?? status;
+  }
+
+  activityKindLabel(kind: ActivityFeedItemDto['kind']): string {
+    const labels: Record<ActivityFeedItemDto['kind'], string> = {
+      LINK: 'Vinculacion',
+      LINK_PENDING: 'Pendiente',
+      LINK_HISTORY: 'Historial',
+      EVENT: 'Evento',
+      STATUS: 'Estado',
+    };
+
+    return labels[kind] ?? kind;
+  }
+
+  activityStatusColor(item: ActivityFeedItemDto): string {
+    const status = item.status ?? '';
+    if (status === 'APPROVED' || status === 'COMPLETED') {
+      return 'success';
+    }
+    if (status === 'REJECTED' || status === 'CANCELLED' || status === 'REVOKED') {
+      return 'danger';
+    }
+    if (status === 'PENDING' || status === 'IN_PROGRESS') {
+      return 'warning';
+    }
+    return 'medium';
   }
 
   logout(): void {

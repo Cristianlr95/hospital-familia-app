@@ -64,6 +64,7 @@
 .request-row,
 .event-row,
 .history-row,
+.activity-row,
 .row-actions {
   align-items: flex-start;
   display: flex;
@@ -73,14 +74,16 @@
 .panel-heading,
 .request-row,
 .event-row,
-.history-row {
+.history-row,
+.activity-row {
   justify-content: space-between;
 }
 
 .panel h2,
 .request-row h3,
 .event-row h3,
-.history-row h3 {
+.history-row h3,
+.activity-row h3 {
   color: var(--hf-text);
   font-weight: 850;
   margin: 0;
@@ -88,7 +91,8 @@
 
 .request-list,
 .event-list,
-.history-list {
+.history-list,
+.activity-list {
   display: grid;
   gap: 0.75rem;
   margin-top: 0.8rem;
@@ -96,7 +100,8 @@
 
 .request-row,
 .event-row,
-.history-row {
+.history-row,
+.activity-row {
   background: #f9fafb;
   border: 1px solid var(--hf-soft-border);
   border-radius: var(--hf-radius);
@@ -133,6 +138,11 @@
 .history-reason {
   color: var(--hf-text);
   font-weight: 600;
+}
+
+.activity-panel {
+  background: #fff7ed;
+  border-color: #fed7aa;
 }
 
 .text-action {
@@ -257,6 +267,7 @@
   .request-row,
   .event-row,
   .history-row,
+  .activity-row,
   .panel-heading {
     display: grid;
     grid-template-columns: 1fr;
