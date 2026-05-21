@@ -9,7 +9,11 @@ import { LinkingService } from '../../../linking/services/linking.service';
 import { LinkRequestDto, LinkedPatientDto } from '../../../linking/models/linking.models';
 import { PatientEventDto } from '../../../events/models/patient-event.models';
 import { PatientEventService } from '../../../events/services/patient-event.service';
-import { NotificationPreferenceDto } from '../../../notifications/models/notification-preference.models';
+import {
+  NotificationDto,
+  NotificationPreferenceDto,
+  NotificationType,
+} from '../../../notifications/models/notification-preference.models';
 import { NotificationPreferenceService } from '../../../notifications/services/notification-preference.service';
 import { PatientStatusDto } from '../../../patient/models/patient-status.models';
 import { PatientStatusService } from '../../../patient/services/patient-status.service';
@@ -36,6 +40,7 @@ export class TutorDashboardPage implements OnInit {
   linkRequests: LinkRequestDto[] = [];
   patientStatuses: PatientStatusDto[] = [];
   upcomingEvents: PatientEventDto[] = [];
+  notifications: NotificationDto[] = [];
   notificationPreferences: NotificationPreferenceDto | null = null;
   isRefreshing = false;
   isLoadingActivity = false;
@@ -44,13 +49,16 @@ export class TutorDashboardPage implements OnInit {
   sessionActionId: string | null = null;
   isLoadingLinks = false;
   isLoadingPatientOverview = false;
+  isLoadingNotifications = false;
   isLoadingNotificationPreferences = false;
   isSavingNotificationPreferences = false;
+  notificationActionId: number | null = null;
   errorMessage = '';
   activityErrorMessage = '';
   sessionErrorMessage = '';
   linkErrorMessage = '';
   patientOverviewErrorMessage = '';
+  notificationErrorMessage = '';
   notificationPreferenceMessage = '';
   notificationPreferenceErrorMessage = '';
 
@@ -60,6 +68,7 @@ export class TutorDashboardPage implements OnInit {
     this.loadSessions();
     this.loadLinkingSummary();
     this.loadPatientOverview();
+    this.loadNotifications();
     this.loadNotificationPreferences();
   }
 
@@ -209,6 +218,26 @@ export class TutorDashboardPage implements OnInit {
     });
   }
 
+  loadNotifications(): void {
+    if (this.isLoadingNotifications) {
+      return;
+    }
+
+    this.isLoadingNotifications = true;
+    this.notificationErrorMessage = '';
+
+    this.notificationPreferenceService.getNotifications().subscribe({
+      next: (notifications) => {
+        this.notifications = notifications;
+        this.isLoadingNotifications = false;
+      },
+      error: (error) => {
+        this.isLoadingNotifications = false;
+        this.notificationErrorMessage = error?.error?.message ?? 'No pudimos cargar tus notificaciones.';
+      },
+    });
+  }
+
   updateNotificationPreference(
     key: 'stateChangesEnabled' | 'eventsEnabled' | 'linkingUpdatesEnabled' | 'quietHoursEnabled',
     event: Event,
@@ -256,6 +285,28 @@ export class TutorDashboardPage implements OnInit {
     });
   }
 
+  markNotificationAsRead(notification: NotificationDto): void {
+    if (notification.read || this.notificationActionId) {
+      return;
+    }
+
+    this.notificationActionId = notification.id;
+    this.notificationErrorMessage = '';
+
+    this.notificationPreferenceService.markAsRead(notification.id).subscribe({
+      next: (updatedNotification) => {
+        this.notifications = this.notifications.map((item) => (
+          item.id === updatedNotification.id ? updatedNotification : item
+        ));
+        this.notificationActionId = null;
+      },
+      error: (error) => {
+        this.notificationActionId = null;
+        this.notificationErrorMessage = error?.error?.message ?? 'No pudimos marcar la notificacion como leida.';
+      },
+    });
+  }
+
   eventTypeLabel(type: PatientEventDto['type']): string {
     const labels: Record<PatientEventDto['type'], string> = {
       SURGERY: 'Cirugia',
@@ -279,6 +330,19 @@ export class TutorDashboardPage implements OnInit {
     };
 
     return labels[kind] ?? kind;
+  }
+
+  notificationTypeLabel(type: NotificationType): string {
+    const labels: Record<NotificationType, string> = {
+      STATE_CHANGE: 'Cambio de estado',
+      NEW_EVENT: 'Nuevo evento',
+      EVENT_UPDATED: 'Evento actualizado',
+      LINKING_APPROVED: 'Vinculacion aprobada',
+      LINKING_REJECTED: 'Vinculacion rechazada',
+      LINKING_REVOKED: 'Acceso revocado',
+    };
+
+    return labels[type] ?? type;
   }
 
   activityStatusColor(item: ActivityFeedItemDto): string {

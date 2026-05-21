@@ -109,11 +109,59 @@
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Notificaciones</p>
-          <h2>Preferencias familiares</h2>
+          <h2>Centro familiar</h2>
         </div>
-        <ion-button fill="clear" size="small" (click)="loadNotificationPreferences()" [disabled]="isLoadingNotificationPreferences">
-          Actualizar
-        </ion-button>
+        <div class="panel-actions">
+          <ion-button fill="clear" size="small" (click)="loadNotifications()" [disabled]="isLoadingNotifications">
+            Bandeja
+          </ion-button>
+          <ion-button fill="clear" size="small" (click)="loadNotificationPreferences()" [disabled]="isLoadingNotificationPreferences">
+            Preferencias
+          </ion-button>
+        </div>
+      </div>
+
+      <div class="notification-summary">
+        <strong>{{ notifications.length }}</strong>
+        <span>{{ notifications.length === 1 ? 'notificacion reciente' : 'notificaciones recientes' }}</span>
+      </div>
+
+      <ion-spinner *ngIf="isLoadingNotifications" name="crescent"></ion-spinner>
+
+      <p *ngIf="!isLoadingNotifications && !notifications.length">
+        Aun no hay avisos familiares. Aqui apareceran cambios de estado, eventos y decisiones de vinculacion.
+      </p>
+
+      <div class="notification-list" *ngIf="notifications.length">
+        <article class="notification-row" [class.unread]="!notification.read" *ngFor="let notification of notifications">
+          <div>
+            <p class="eyebrow">{{ notificationTypeLabel(notification.type) }} - {{ notification.createdAt | date: 'short' }}</p>
+            <h3>{{ notification.title }}</h3>
+            <p *ngIf="notification.patientDisplayName">{{ notification.patientDisplayName }}</p>
+            <p>{{ notification.message }}</p>
+          </div>
+          <div class="notification-actions">
+            <ion-badge [color]="notification.read ? 'medium' : 'success'">
+              {{ notification.read ? 'Leida' : 'Nueva' }}
+            </ion-badge>
+            <ion-button
+              *ngIf="!notification.read"
+              size="small"
+              fill="outline"
+              (click)="markNotificationAsRead(notification)"
+              [disabled]="notificationActionId === notification.id"
+            >
+              Marcar leida
+            </ion-button>
+          </div>
+        </article>
+      </div>
+
+      <p class="error-message inline-error" *ngIf="notificationErrorMessage">{{ notificationErrorMessage }}</p>
+
+      <div class="preference-heading">
+        <p class="eyebrow">Preferencias</p>
+        <h3>Que avisos quieres recibir</h3>
       </div>
 
       <ion-spinner *ngIf="isLoadingNotificationPreferences" name="crescent"></ion-spinner>

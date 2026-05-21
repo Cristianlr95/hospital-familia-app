@@ -79,6 +79,7 @@ dd {
 .event-list,
 .activity-list,
 .session-list,
+.notification-list,
 .preference-list {
   display: grid;
   gap: 0.75rem;
@@ -90,6 +91,7 @@ dd {
 .event-row,
 .activity-row,
 .session-row,
+.notification-row,
 .preference-row {
   align-items: flex-start;
   background: #f9fafb;
@@ -107,6 +109,7 @@ dd {
 .event-row h3,
 .activity-row h3,
 .session-row h3,
+.notification-row h3,
 .preference-row h3 {
   color: var(--hf-text);
   font-size: 1rem;
@@ -207,6 +210,57 @@ dd {
   border-color: #c7d2fe;
 }
 
+.notification-summary {
+  align-items: baseline;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: var(--hf-radius);
+  display: flex;
+  gap: 0.45rem;
+  margin: 1rem 0 0.85rem;
+  padding: 0.75rem 0.85rem;
+}
+
+.notification-summary strong {
+  color: var(--hf-text);
+  font-size: 1.7rem;
+  font-weight: 950;
+}
+
+.notification-summary span {
+  color: var(--hf-muted);
+  font-weight: 800;
+}
+
+.notification-row {
+  background: #ffffff;
+}
+
+.notification-row.unread {
+  border-color: #818cf8;
+  box-shadow: inset 4px 0 0 #6366f1;
+}
+
+.notification-actions {
+  align-items: flex-end;
+  display: grid;
+  gap: 0.5rem;
+  justify-items: end;
+}
+
+.preference-heading {
+  border-top: 1px solid rgba(99, 102, 241, 0.2);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.preference-heading h3 {
+  color: var(--hf-text);
+  font-size: 1rem;
+  font-weight: 900;
+  margin: 0;
+}
+
 .preference-row {
   align-items: center;
 }
@@ -286,10 +340,15 @@ dd {
   .event-row,
   .activity-row,
   .session-row,
+  .notification-row,
   .preference-row,
   .status-row-header {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .notification-actions {
+    justify-items: start;
   }
 
   .panel-heading {
