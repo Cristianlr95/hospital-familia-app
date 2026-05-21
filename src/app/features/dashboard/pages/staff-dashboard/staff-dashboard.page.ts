@@ -9,6 +9,7 @@ import { PatientEventDto, PatientEventStatus, PatientEventType } from '../../../
 import { PatientEventService } from '../../../events/services/patient-event.service';
 import { LinkHistoryItemDto, LinkStatus, PendingLinkRequestDto } from '../../../linking/models/linking.models';
 import { LinkingService } from '../../../linking/services/linking.service';
+import { PatientStatusService } from '../../../patient/services/patient-status.service';
 
 @Component({
   selector: 'app-staff-dashboard-page',
@@ -21,6 +22,7 @@ export class StaffDashboardPage implements OnInit {
   private readonly activityFeedService = inject(ActivityFeedService);
   private readonly linkingService = inject(LinkingService);
   private readonly eventService = inject(PatientEventService);
+  private readonly patientStatusService = inject(PatientStatusService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
 
@@ -37,6 +39,7 @@ export class StaffDashboardPage implements OnInit {
   isLoadingHistory = false;
   isLoadingEvents = false;
   isSavingEvent = false;
+  isSavingStatus = false;
   isRevokingOtherSessions = false;
   actionRequestId: number | null = null;
   sessionActionId: string | null = null;
@@ -47,6 +50,8 @@ export class StaffDashboardPage implements OnInit {
   requestErrorMessage = '';
   historyErrorMessage = '';
   eventErrorMessage = '';
+  eventFormErrorMessage = '';
+  statusErrorMessage = '';
   activityErrorMessage = '';
   sessionErrorMessage = '';
   successMessage = '';
@@ -65,6 +70,14 @@ export class StaffDashboardPage implements OnInit {
     service: ['', [Validators.maxLength(120)]],
     location: ['', [Validators.maxLength(120)]],
     responsibleStaff: ['', [Validators.maxLength(160)]],
+  });
+
+  readonly statusForm = this.formBuilder.group({
+    patientPublicId: ['', [Validators.required]],
+    careStatus: ['', [Validators.required, Validators.maxLength(80)]],
+    currentService: ['', [Validators.maxLength(120)]],
+    currentLocation: ['', [Validators.maxLength(120)]],
+    summary: ['', [Validators.maxLength(220)]],
   });
 
   ngOnInit(): void {
@@ -212,6 +225,7 @@ export class StaffDashboardPage implements OnInit {
   selectPatient(patientPublicId: string): void {
     this.selectedPatientPublicId = patientPublicId;
     this.eventForm.patchValue({ patientPublicId });
+    this.statusForm.patchValue({ patientPublicId });
     this.loadEvents(patientPublicId);
   }
 
@@ -269,12 +283,14 @@ export class StaffDashboardPage implements OnInit {
   createEvent(): void {
     if (this.eventForm.invalid || this.isSavingEvent) {
       this.eventForm.markAllAsTouched();
+      this.eventFormErrorMessage = 'Revisa los campos obligatorios antes de crear el evento.';
       return;
     }
 
     const raw = this.eventForm.getRawValue();
     this.isSavingEvent = true;
     this.eventErrorMessage = '';
+    this.eventFormErrorMessage = '';
     this.successMessage = '';
 
     this.eventService.createEvent({
@@ -305,7 +321,38 @@ export class StaffDashboardPage implements OnInit {
       },
       error: (error) => {
         this.isSavingEvent = false;
-        this.eventErrorMessage = error?.error?.message ?? 'No pudimos crear el evento.';
+        this.eventFormErrorMessage = error?.error?.message ?? 'No pudimos crear el evento.';
+      },
+    });
+  }
+
+  updateVisibleStatus(): void {
+    if (this.statusForm.invalid || this.isSavingStatus) {
+      this.statusForm.markAllAsTouched();
+      this.statusErrorMessage = 'Revisa los campos obligatorios antes de actualizar el estado.';
+      return;
+    }
+
+    const raw = this.statusForm.getRawValue();
+    const patientPublicId = raw.patientPublicId ?? '';
+    this.isSavingStatus = true;
+    this.statusErrorMessage = '';
+    this.successMessage = '';
+
+    this.patientStatusService.updatePatientStatusForStaff(patientPublicId, {
+      careStatus: raw.careStatus ?? '',
+      currentService: this.cleanOptional(raw.currentService),
+      currentLocation: this.cleanOptional(raw.currentLocation),
+      summary: this.cleanOptional(raw.summary),
+    }).subscribe({
+      next: () => {
+        this.isSavingStatus = false;
+        this.successMessage = 'Estado visible actualizado para la familia.';
+        this.loadActivityFeed();
+      },
+      error: (error) => {
+        this.isSavingStatus = false;
+        this.statusErrorMessage = error?.error?.message ?? 'No pudimos actualizar el estado visible.';
       },
     });
   }
@@ -422,6 +469,16 @@ export class StaffDashboardPage implements OnInit {
     this.authService.logout().subscribe(() => {
       void this.router.navigate(['/auth/login']);
     });
+  }
+
+  isFieldInvalid(controlName: keyof typeof this.eventForm.controls): boolean {
+    const control = this.eventForm.controls[controlName];
+    return control.invalid && (control.touched || control.dirty);
+  }
+
+  isStatusFieldInvalid(controlName: keyof typeof this.statusForm.controls): boolean {
+    const control = this.statusForm.controls[controlName];
+    return control.invalid && (control.touched || control.dirty);
   }
 
   private cleanOptional(value: string | null | undefined): string | null {

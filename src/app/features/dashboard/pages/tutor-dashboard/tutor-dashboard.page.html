@@ -105,6 +105,75 @@
       </div>
     </section>
 
+    <section class="panel notification-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Notificaciones</p>
+          <h2>Preferencias familiares</h2>
+        </div>
+        <ion-button fill="clear" size="small" (click)="loadNotificationPreferences()" [disabled]="isLoadingNotificationPreferences">
+          Actualizar
+        </ion-button>
+      </div>
+
+      <ion-spinner *ngIf="isLoadingNotificationPreferences" name="crescent"></ion-spinner>
+
+      <div class="preference-list" *ngIf="notificationPreferences && !isLoadingNotificationPreferences">
+        <article class="preference-row">
+          <div>
+            <h3>Cambios de estado</h3>
+            <p>Avisos cuando el hospital actualiza el resumen clinico visible.</p>
+          </div>
+          <ion-toggle
+            [checked]="notificationPreferences.stateChangesEnabled"
+            [disabled]="isSavingNotificationPreferences"
+            (ionChange)="updateNotificationPreference('stateChangesEnabled', $event)"
+          ></ion-toggle>
+        </article>
+
+        <article class="preference-row">
+          <div>
+            <h3>Eventos y calendario</h3>
+            <p>Procedimientos, examenes, visitas autorizadas y cambios programados.</p>
+          </div>
+          <ion-toggle
+            [checked]="notificationPreferences.eventsEnabled"
+            [disabled]="isSavingNotificationPreferences"
+            (ionChange)="updateNotificationPreference('eventsEnabled', $event)"
+          ></ion-toggle>
+        </article>
+
+        <article class="preference-row">
+          <div>
+            <h3>Vinculaciones</h3>
+            <p>Resultados de aprobacion, rechazo o revocacion de acceso familiar.</p>
+          </div>
+          <ion-toggle
+            [checked]="notificationPreferences.linkingUpdatesEnabled"
+            [disabled]="isSavingNotificationPreferences"
+            (ionChange)="updateNotificationPreference('linkingUpdatesEnabled', $event)"
+          ></ion-toggle>
+        </article>
+
+        <article class="preference-row">
+          <div>
+            <h3>Horario silencioso</h3>
+            <p>
+              {{ notificationPreferences.quietHoursEnabled ? 'Silenciar entre ' + notificationPreferences.quietHoursStart + ' y ' + notificationPreferences.quietHoursEnd : 'Sin horario silencioso configurado.' }}
+            </p>
+          </div>
+          <ion-toggle
+            [checked]="notificationPreferences.quietHoursEnabled"
+            [disabled]="isSavingNotificationPreferences"
+            (ionChange)="updateNotificationPreference('quietHoursEnabled', $event)"
+          ></ion-toggle>
+        </article>
+      </div>
+
+      <p class="success-message inline-success" *ngIf="notificationPreferenceMessage">{{ notificationPreferenceMessage }}</p>
+      <p class="error-message inline-error" *ngIf="notificationPreferenceErrorMessage">{{ notificationPreferenceErrorMessage }}</p>
+    </section>
+
     <section class="panel activity-panel">
       <div class="panel-heading">
         <div>

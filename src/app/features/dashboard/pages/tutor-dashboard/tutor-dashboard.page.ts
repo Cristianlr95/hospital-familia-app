@@ -9,6 +9,8 @@ import { LinkingService } from '../../../linking/services/linking.service';
 import { LinkRequestDto, LinkedPatientDto } from '../../../linking/models/linking.models';
 import { PatientEventDto } from '../../../events/models/patient-event.models';
 import { PatientEventService } from '../../../events/services/patient-event.service';
+import { NotificationPreferenceDto } from '../../../notifications/models/notification-preference.models';
+import { NotificationPreferenceService } from '../../../notifications/services/notification-preference.service';
 import { PatientStatusDto } from '../../../patient/models/patient-status.models';
 import { PatientStatusService } from '../../../patient/services/patient-status.service';
 
@@ -24,6 +26,7 @@ export class TutorDashboardPage implements OnInit {
   private readonly linkingService = inject(LinkingService);
   private readonly patientStatusService = inject(PatientStatusService);
   private readonly patientEventService = inject(PatientEventService);
+  private readonly notificationPreferenceService = inject(NotificationPreferenceService);
   private readonly router = inject(Router);
 
   user: UserDto | null = this.authService.getCurrentUser();
@@ -33,6 +36,7 @@ export class TutorDashboardPage implements OnInit {
   linkRequests: LinkRequestDto[] = [];
   patientStatuses: PatientStatusDto[] = [];
   upcomingEvents: PatientEventDto[] = [];
+  notificationPreferences: NotificationPreferenceDto | null = null;
   isRefreshing = false;
   isLoadingActivity = false;
   isLoadingSessions = false;
@@ -40,11 +44,15 @@ export class TutorDashboardPage implements OnInit {
   sessionActionId: string | null = null;
   isLoadingLinks = false;
   isLoadingPatientOverview = false;
+  isLoadingNotificationPreferences = false;
+  isSavingNotificationPreferences = false;
   errorMessage = '';
   activityErrorMessage = '';
   sessionErrorMessage = '';
   linkErrorMessage = '';
   patientOverviewErrorMessage = '';
+  notificationPreferenceMessage = '';
+  notificationPreferenceErrorMessage = '';
 
   ngOnInit(): void {
     this.refreshSession();
@@ -52,6 +60,7 @@ export class TutorDashboardPage implements OnInit {
     this.loadSessions();
     this.loadLinkingSummary();
     this.loadPatientOverview();
+    this.loadNotificationPreferences();
   }
 
   refreshSession(): void {
@@ -175,6 +184,74 @@ export class TutorDashboardPage implements OnInit {
       error: (error) => {
         this.isLoadingPatientOverview = false;
         this.patientOverviewErrorMessage = error?.error?.message ?? 'No pudimos cargar el estado autorizado de tus pacientes.';
+      },
+    });
+  }
+
+  loadNotificationPreferences(): void {
+    if (this.isLoadingNotificationPreferences) {
+      return;
+    }
+
+    this.isLoadingNotificationPreferences = true;
+    this.notificationPreferenceErrorMessage = '';
+    this.notificationPreferenceMessage = '';
+
+    this.notificationPreferenceService.getPreferences().subscribe({
+      next: (preferences) => {
+        this.notificationPreferences = preferences;
+        this.isLoadingNotificationPreferences = false;
+      },
+      error: (error) => {
+        this.isLoadingNotificationPreferences = false;
+        this.notificationPreferenceErrorMessage = error?.error?.message ?? 'No pudimos cargar tus preferencias.';
+      },
+    });
+  }
+
+  updateNotificationPreference(
+    key: 'stateChangesEnabled' | 'eventsEnabled' | 'linkingUpdatesEnabled' | 'quietHoursEnabled',
+    event: Event,
+  ): void {
+    if (!this.notificationPreferences || this.isSavingNotificationPreferences) {
+      return;
+    }
+
+    const checked = Boolean((event as CustomEvent<{ checked: boolean }>).detail?.checked);
+    const nextPreferences: NotificationPreferenceDto = {
+      ...this.notificationPreferences,
+      [key]: checked,
+    };
+
+    if (key === 'quietHoursEnabled' && checked && !nextPreferences.quietHoursStart) {
+      nextPreferences.quietHoursStart = '22:00';
+      nextPreferences.quietHoursEnd = '07:00';
+    }
+
+    this.saveNotificationPreferences(nextPreferences);
+  }
+
+  private saveNotificationPreferences(preferences: NotificationPreferenceDto): void {
+    this.isSavingNotificationPreferences = true;
+    this.notificationPreferenceErrorMessage = '';
+    this.notificationPreferenceMessage = '';
+
+    this.notificationPreferenceService.updatePreferences({
+      stateChangesEnabled: preferences.stateChangesEnabled,
+      eventsEnabled: preferences.eventsEnabled,
+      linkingUpdatesEnabled: preferences.linkingUpdatesEnabled,
+      quietHoursEnabled: preferences.quietHoursEnabled,
+      quietHoursStart: preferences.quietHoursStart,
+      quietHoursEnd: preferences.quietHoursEnd,
+    }).subscribe({
+      next: (savedPreferences) => {
+        this.notificationPreferences = savedPreferences;
+        this.isSavingNotificationPreferences = false;
+        this.notificationPreferenceMessage = 'Preferencias actualizadas.';
+      },
+      error: (error) => {
+        this.isSavingNotificationPreferences = false;
+        this.notificationPreferenceErrorMessage = error?.error?.message ?? 'No pudimos guardar tus preferencias.';
       },
     });
   }
