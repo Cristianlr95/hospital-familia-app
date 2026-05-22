@@ -14,10 +14,20 @@
         <h2>Iniciar sesion</h2>
       </div>
 
-      <form [formGroup]="form" (ngSubmit)="submit()">
+      <form [formGroup]="form" (ngSubmit)="submit()" autocomplete="off">
+        <input class="autofill-decoy" type="text" name="username" autocomplete="username" tabindex="-1" aria-hidden="true">
+        <input class="autofill-decoy" type="password" name="password" autocomplete="current-password" tabindex="-1" aria-hidden="true">
+
         <ion-item lines="none" class="field">
-          <ion-label position="stacked">Email</ion-label>
-          <ion-input type="email" inputmode="email" autocomplete="email" formControlName="email"></ion-input>
+          <ion-label position="stacked">Correo electronico</ion-label>
+          <ion-input
+            type="email"
+            inputmode="email"
+            autocomplete="off"
+            name="hospital_familia_login_email"
+            placeholder="tutor@hospitalfamilia.local"
+            formControlName="email"
+          ></ion-input>
         </ion-item>
         <ion-note color="danger" *ngIf="form.controls.email.touched && form.controls.email.invalid">
           Ingresa un email valido.
@@ -25,7 +35,13 @@
 
         <ion-item lines="none" class="field">
           <ion-label position="stacked">Contrasena</ion-label>
-          <ion-input type="password" autocomplete="current-password" formControlName="password"></ion-input>
+          <ion-input
+            type="password"
+            autocomplete="new-password"
+            name="hospital_familia_login_password"
+            placeholder="Tu contrasena"
+            formControlName="password"
+          ></ion-input>
         </ion-item>
         <ion-note color="danger" *ngIf="form.controls.password.touched && form.controls.password.invalid">
           La contrasena debe tener al menos 8 caracteres.
