@@ -16,6 +16,7 @@ export class LoginPage {
 
   isSubmitting = false;
   errorMessage = '';
+  focusedField: 'email' | 'password' | null = null;
 
   readonly form = this.formBuilder.group({
     email: ['', [Validators.required, Validators.email]],

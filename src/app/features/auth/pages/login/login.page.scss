@@ -66,24 +66,40 @@
 }
 
 .field {
-  --background: #ffffff;
-  --border-radius: var(--hf-radius);
-  --color: var(--hf-text);
-  --highlight-color-focused: var(--ion-color-primary);
-  --padding-start: 1rem;
+  background: #ffffff;
   border: 1px solid var(--hf-border);
   border-radius: var(--hf-radius);
+  display: grid;
+  gap: 0.35rem;
   margin-top: 0.75rem;
+  min-height: 5.2rem;
+  padding: 0.8rem 1rem 0.7rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.field label {
+  color: var(--hf-muted);
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 850;
+  line-height: 1;
+  margin: 0;
 }
 
 .field ion-input {
   --background: #ffffff;
   --color: var(--hf-text);
+  --padding-bottom: 0;
+  --padding-end: 0;
+  --padding-start: 0;
+  --padding-top: 0;
   --placeholder-color: #94a3b8;
   --placeholder-opacity: 1;
+  font-size: 1rem;
+  min-height: 2.2rem;
 }
 
-.field:focus-within {
+.field-focus {
   border-color: var(--ion-color-primary);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }

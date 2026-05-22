@@ -18,31 +18,37 @@
         <input class="autofill-decoy" type="text" name="username" autocomplete="username" tabindex="-1" aria-hidden="true">
         <input class="autofill-decoy" type="password" name="password" autocomplete="current-password" tabindex="-1" aria-hidden="true">
 
-        <ion-item lines="none" class="field">
-          <ion-label position="stacked">Correo electronico</ion-label>
+        <div class="field" [class.field-focus]="focusedField === 'email'">
+          <label for="hospital-familia-login-email">Correo electronico</label>
           <ion-input
+            id="hospital-familia-login-email"
             type="email"
             inputmode="email"
             autocomplete="off"
             name="hospital_familia_login_email"
             placeholder="tutor@hospitalfamilia.local"
             formControlName="email"
+            (ionFocus)="focusedField = 'email'"
+            (ionBlur)="focusedField = null"
           ></ion-input>
-        </ion-item>
+        </div>
         <ion-note color="danger" *ngIf="form.controls.email.touched && form.controls.email.invalid">
           Ingresa un email valido.
         </ion-note>
 
-        <ion-item lines="none" class="field">
-          <ion-label position="stacked">Contrasena</ion-label>
+        <div class="field" [class.field-focus]="focusedField === 'password'">
+          <label for="hospital-familia-login-password">Contrasena</label>
           <ion-input
+            id="hospital-familia-login-password"
             type="password"
             autocomplete="new-password"
             name="hospital_familia_login_password"
             placeholder="Tu contrasena"
             formControlName="password"
+            (ionFocus)="focusedField = 'password'"
+            (ionBlur)="focusedField = null"
           ></ion-input>
-        </ion-item>
+        </div>
         <ion-note color="danger" *ngIf="form.controls.password.touched && form.controls.password.invalid">
           La contrasena debe tener al menos 8 caracteres.
         </ion-note>
