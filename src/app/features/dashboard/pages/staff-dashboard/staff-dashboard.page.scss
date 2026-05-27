@@ -74,6 +74,7 @@
 
 .panel-heading,
 .request-row,
+.patient-row,
 .event-row,
 .history-row,
 .activity-row,
@@ -86,6 +87,7 @@
 
 .panel-heading,
 .request-row,
+.patient-row,
 .event-row,
 .history-row,
 .activity-row,
@@ -105,6 +107,7 @@
 }
 
 .request-list,
+.patient-list,
 .event-list,
 .history-list,
 .activity-list,
@@ -115,6 +118,7 @@
 }
 
 .request-row,
+.patient-row,
 .event-row,
 .history-row,
 .activity-row,
@@ -128,6 +132,24 @@
 .request-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.patients-panel {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.patients-panel ion-button[type='submit'] {
+  --border-radius: var(--hf-radius);
+  margin-top: 0.5rem;
+}
+
+.patient-row {
+  align-items: center;
+}
+
+.patient-row p {
+  word-break: break-word;
 }
 
 .row-actions {
@@ -275,12 +297,12 @@
 
   .requests-panel {
     grid-column: 1;
-    grid-row: 1;
+    grid-row: 2;
   }
 
   .history-panel {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 3;
   }
 
   .event-form-panel {
@@ -309,6 +331,7 @@
   }
 
   .request-row,
+  .patient-row,
   .event-row,
   .history-row,
   .activity-row,

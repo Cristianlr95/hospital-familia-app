@@ -9,6 +9,8 @@ import { PatientEventDto, PatientEventStatus, PatientEventType } from '../../../
 import { PatientEventService } from '../../../events/services/patient-event.service';
 import { LinkHistoryItemDto, LinkStatus, PendingLinkRequestDto } from '../../../linking/models/linking.models';
 import { LinkingService } from '../../../linking/services/linking.service';
+import { StaffPatientDto } from '../../../patient/models/staff-patient.models';
+import { StaffPatientService } from '../../../patient/services/staff-patient.service';
 import { PatientStatusService } from '../../../patient/services/patient-status.service';
 
 @Component({
@@ -21,6 +23,7 @@ export class StaffDashboardPage implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly activityFeedService = inject(ActivityFeedService);
   private readonly linkingService = inject(LinkingService);
+  private readonly staffPatientService = inject(StaffPatientService);
   private readonly eventService = inject(PatientEventService);
   private readonly patientStatusService = inject(PatientStatusService);
   private readonly formBuilder = inject(FormBuilder);
@@ -31,13 +34,16 @@ export class StaffDashboardPage implements OnInit {
   sessions: AuthSessionItemDto[] = [];
   pendingRequests: PendingLinkRequestDto[] = [];
   historyItems: LinkHistoryItemDto[] = [];
+  patients: StaffPatientDto[] = [];
   selectedPatientPublicId = '';
   events: PatientEventDto[] = [];
   isLoadingActivity = false;
   isLoadingSessions = false;
   isLoadingRequests = false;
   isLoadingHistory = false;
+  isLoadingPatients = false;
   isLoadingEvents = false;
+  isSavingPatient = false;
   isSavingEvent = false;
   isSavingStatus = false;
   isRevokingOtherSessions = false;
@@ -49,6 +55,8 @@ export class StaffDashboardPage implements OnInit {
   historyFilter: LinkStatus | 'ALL' = 'ALL';
   requestErrorMessage = '';
   historyErrorMessage = '';
+  patientErrorMessage = '';
+  patientFormErrorMessage = '';
   eventErrorMessage = '';
   eventFormErrorMessage = '';
   statusErrorMessage = '';
@@ -59,6 +67,11 @@ export class StaffDashboardPage implements OnInit {
   readonly eventTypes: PatientEventType[] = ['SURGERY', 'EXAM', 'VISIT', 'STATE_CHANGE', 'DISCHARGE', 'OTHER'];
   readonly eventStatuses: PatientEventStatus[] = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
   readonly historyFilters: Array<LinkStatus | 'ALL'> = ['ALL', 'APPROVED', 'REJECTED', 'REVOKED'];
+
+  readonly patientForm = this.formBuilder.group({
+    displayName: ['', [Validators.required, Validators.maxLength(160)]],
+    linkCode: ['', [Validators.required, Validators.maxLength(40), Validators.pattern(/^[A-Za-z0-9-]+$/)]],
+  });
 
   readonly eventForm = this.formBuilder.group({
     patientPublicId: ['', [Validators.required]],
@@ -84,6 +97,7 @@ export class StaffDashboardPage implements OnInit {
     this.refreshSession();
     this.loadActivityFeed();
     this.loadSessions();
+    this.loadPatients();
     this.loadPendingRequests();
     this.loadHistory();
   }
@@ -161,6 +175,57 @@ export class StaffDashboardPage implements OnInit {
     });
   }
 
+  loadPatients(): void {
+    if (this.isLoadingPatients) {
+      return;
+    }
+
+    this.isLoadingPatients = true;
+    this.patientErrorMessage = '';
+
+    this.staffPatientService.getActivePatients().subscribe({
+      next: (patients) => {
+        this.patients = patients;
+        this.isLoadingPatients = false;
+      },
+      error: (error) => {
+        this.isLoadingPatients = false;
+        this.patientErrorMessage = error?.error?.message ?? 'No pudimos cargar los pacientes activos.';
+      },
+    });
+  }
+
+  createPatient(): void {
+    if (this.patientForm.invalid || this.isSavingPatient) {
+      this.patientForm.markAllAsTouched();
+      this.patientFormErrorMessage = 'Revisa nombre y codigo antes de crear el paciente.';
+      return;
+    }
+
+    const raw = this.patientForm.getRawValue();
+    this.isSavingPatient = true;
+    this.patientFormErrorMessage = '';
+    this.patientErrorMessage = '';
+    this.successMessage = '';
+
+    this.staffPatientService.createPatient({
+      displayName: raw.displayName ?? '',
+      linkCode: raw.linkCode ?? '',
+    }).subscribe({
+      next: (patient) => {
+        this.isSavingPatient = false;
+        this.successMessage = 'Paciente creado para vinculacion familiar.';
+        this.patients = [patient, ...this.patients.filter((item) => item.publicId !== patient.publicId)];
+        this.patientForm.reset();
+        this.selectPatient(patient.publicId);
+      },
+      error: (error) => {
+        this.isSavingPatient = false;
+        this.patientFormErrorMessage = error?.error?.message ?? 'No pudimos crear el paciente.';
+      },
+    });
+  }
+
   approve(request: PendingLinkRequestDto): void {
     this.actionRequestId = request.id;
     this.requestErrorMessage = '';
@@ -227,6 +292,10 @@ export class StaffDashboardPage implements OnInit {
     this.eventForm.patchValue({ patientPublicId });
     this.statusForm.patchValue({ patientPublicId });
     this.loadEvents(patientPublicId);
+  }
+
+  usePatient(patient: StaffPatientDto): void {
+    this.selectPatient(patient.publicId);
   }
 
   loadEvents(patientPublicId = this.eventForm.controls.patientPublicId.value ?? ''): void {
@@ -478,6 +547,11 @@ export class StaffDashboardPage implements OnInit {
 
   isStatusFieldInvalid(controlName: keyof typeof this.statusForm.controls): boolean {
     const control = this.statusForm.controls[controlName];
+    return control.invalid && (control.touched || control.dirty);
+  }
+
+  isPatientFieldInvalid(controlName: keyof typeof this.patientForm.controls): boolean {
+    const control = this.patientForm.controls[controlName];
     return control.invalid && (control.touched || control.dirty);
   }
 
