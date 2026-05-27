@@ -20,6 +20,58 @@
   </section>
 
   <main class="staff-grid">
+    <section class="panel patients-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Pacientes</p>
+          <h2>Crear codigo familiar</h2>
+        </div>
+        <ion-button fill="clear" size="small" (click)="loadPatients()" [disabled]="isLoadingPatients">
+          Actualizar
+        </ion-button>
+      </div>
+
+      <form [formGroup]="patientForm" (ngSubmit)="createPatient()">
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Nombre visible</ion-label>
+          <ion-input formControlName="displayName" placeholder="Maria Gonzalez Rivera"></ion-input>
+        </ion-item>
+        <ion-note color="danger" *ngIf="isPatientFieldInvalid('displayName')">
+          Ingresa un nombre visible para el equipo y la familia.
+        </ion-note>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Codigo de vinculacion</ion-label>
+          <ion-input formControlName="linkCode" placeholder="HF-REV-002"></ion-input>
+        </ion-item>
+        <ion-note color="danger" *ngIf="isPatientFieldInvalid('linkCode')">
+          Usa solo letras, numeros y guiones.
+        </ion-note>
+
+        <ion-button expand="block" type="submit" [disabled]="isSavingPatient">
+          <ion-spinner *ngIf="isSavingPatient" name="crescent"></ion-spinner>
+          <span *ngIf="!isSavingPatient">Crear paciente</span>
+        </ion-button>
+      </form>
+
+      <p class="error-message inline-error" *ngIf="patientFormErrorMessage">{{ patientFormErrorMessage }}</p>
+      <p class="error-message inline-error" *ngIf="patientErrorMessage">{{ patientErrorMessage }}</p>
+
+      <ion-spinner *ngIf="isLoadingPatients" name="crescent"></ion-spinner>
+      <div class="patient-list" *ngIf="patients.length">
+        <article class="patient-row" *ngFor="let patient of patients">
+          <div>
+            <p class="eyebrow">{{ patient.linkCode }}</p>
+            <h3>{{ patient.displayName }}</h3>
+            <p>ID publico: {{ patient.publicId }}</p>
+          </div>
+          <ion-button size="small" fill="outline" (click)="usePatient(patient)">
+            Usar
+          </ion-button>
+        </article>
+      </div>
+    </section>
+
     <section class="panel requests-panel">
       <div class="panel-heading">
         <div>
