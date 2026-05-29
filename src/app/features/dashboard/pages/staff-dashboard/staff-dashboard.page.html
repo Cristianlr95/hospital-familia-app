@@ -65,9 +65,21 @@
             <h3>{{ patient.displayName }}</h3>
             <p>ID publico: {{ patient.publicId }}</p>
           </div>
-          <ion-button size="small" fill="outline" (click)="usePatient(patient)">
-            Usar
-          </ion-button>
+          <div class="patient-actions">
+            <ion-button size="small" fill="outline" (click)="usePatient(patient)">
+              Usar
+            </ion-button>
+            <ion-button
+              size="small"
+              fill="clear"
+              color="danger"
+              (click)="archivePatient(patient)"
+              [disabled]="archivingPatientId === patient.publicId"
+            >
+              <ion-spinner *ngIf="archivingPatientId === patient.publicId" name="crescent"></ion-spinner>
+              <span *ngIf="archivingPatientId !== patient.publicId">Archivar</span>
+            </ion-button>
+          </div>
         </article>
       </div>
     </section>
