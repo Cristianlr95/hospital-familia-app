@@ -35,6 +35,10 @@ export class StorageService {
     localStorage.setItem(USER_KEY, JSON.stringify(session.user));
   }
 
+  saveUser(user: UserDto): void {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
+
   clearSession(): void {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);

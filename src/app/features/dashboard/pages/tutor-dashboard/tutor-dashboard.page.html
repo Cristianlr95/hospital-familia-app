@@ -257,22 +257,54 @@
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Cuenta</p>
-          <h2>Sesion validada</h2>
+          <h2>Perfil y contacto</h2>
         </div>
         <ion-button fill="clear" size="small" (click)="refreshSession()" [disabled]="isRefreshing">
           Validar sesion
         </ion-button>
       </div>
-      <dl>
-        <div>
-          <dt>Email</dt>
-          <dd>{{ user?.email }}</dd>
+
+      <form [formGroup]="profileForm" (ngSubmit)="updateProfile()" class="profile-form">
+        <div class="form-grid">
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Nombre</ion-label>
+            <ion-input formControlName="firstName"></ion-input>
+          </ion-item>
+
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Apellido</ion-label>
+            <ion-input formControlName="lastName"></ion-input>
+          </ion-item>
         </div>
-        <div>
-          <dt>Rol</dt>
-          <dd>{{ user?.roles?.join(', ') }}</dd>
-        </div>
-      </dl>
+
+        <ion-note color="danger" *ngIf="isProfileFieldInvalid('firstName') || isProfileFieldInvalid('lastName')">
+          Nombre y apellido son obligatorios.
+        </ion-note>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Telefono de contacto</ion-label>
+          <ion-input type="tel" inputmode="tel" formControlName="phoneNumber"></ion-input>
+        </ion-item>
+
+        <dl>
+          <div>
+            <dt>Email</dt>
+            <dd>{{ user?.email }}</dd>
+          </div>
+          <div>
+            <dt>Rol</dt>
+            <dd>{{ user?.roles?.join(', ') }}</dd>
+          </div>
+        </dl>
+
+        <p class="success-message inline-success" *ngIf="profileMessage">{{ profileMessage }}</p>
+        <p class="error-message inline-error" *ngIf="profileErrorMessage">{{ profileErrorMessage }}</p>
+
+        <ion-button expand="block" type="submit" [disabled]="isSavingProfile">
+          <ion-spinner *ngIf="isSavingProfile" name="crescent"></ion-spinner>
+          <span *ngIf="!isSavingProfile">Guardar perfil</span>
+        </ion-button>
+      </form>
     </section>
 
     <section class="panel sessions-panel">

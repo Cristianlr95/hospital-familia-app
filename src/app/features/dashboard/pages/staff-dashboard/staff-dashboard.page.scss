@@ -139,6 +139,25 @@
   border-color: #cbd5e1;
 }
 
+.profile-panel {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.profile-panel ion-button[type='submit'] {
+  --border-radius: var(--hf-radius);
+  margin-top: 0.5rem;
+}
+
+.staff-email {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: var(--hf-radius);
+  font-weight: 800;
+  margin: 0.75rem 0 0;
+  padding: 0.7rem 0.8rem;
+}
+
 .patients-panel ion-button[type='submit'] {
   --border-radius: var(--hf-radius);
   margin-top: 0.5rem;
@@ -305,27 +324,31 @@
 
   .requests-panel {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 3;
   }
 
   .history-panel {
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 4;
   }
 
   .event-form-panel {
     grid-column: 2;
-    grid-row: 1;
+    grid-row: 2;
   }
 
   .status-form-panel {
     grid-column: 2;
-    grid-row: 2;
+    grid-row: 3;
   }
 
   .events-panel {
     grid-column: 2;
-    grid-row: 3;
+    grid-row: 4;
+  }
+
+  .profile-panel {
+    grid-column: 1 / -1;
   }
 
   .form-grid {

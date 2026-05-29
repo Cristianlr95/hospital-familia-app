@@ -43,6 +43,12 @@ export interface UserDto {
   roles: string[];
 }
 
+export interface UserProfileUpdateRequest {
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string | null;
+}
+
 export interface LoginResponse {
   tokenType: 'Bearer';
   accessToken: string;

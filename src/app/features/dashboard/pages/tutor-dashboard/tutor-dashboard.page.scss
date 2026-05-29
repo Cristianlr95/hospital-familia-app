@@ -127,6 +127,27 @@ dd {
   padding: 1rem;
 }
 
+.field {
+  --background: #ffffff;
+  --border-radius: var(--hf-radius);
+  --color: var(--hf-text);
+  --highlight-color-focused: var(--ion-color-primary);
+  --padding-start: 1rem;
+  border: 1px solid var(--hf-border);
+  border-radius: var(--hf-radius);
+  margin-top: 0.75rem;
+}
+
+.profile-form ion-button[type='submit'] {
+  --border-radius: var(--hf-radius);
+  margin-top: 0.75rem;
+}
+
+.form-grid {
+  display: grid;
+  gap: 0;
+}
+
 .panel-heading {
   align-items: flex-start;
   display: flex;
@@ -319,6 +340,11 @@ dd {
 
   .empty-card {
     grid-row: span 2;
+  }
+
+  .form-grid {
+    gap: 0.75rem;
+    grid-template-columns: 1fr 1fr;
   }
 }
 

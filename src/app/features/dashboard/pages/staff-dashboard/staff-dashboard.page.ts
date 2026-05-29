@@ -44,6 +44,7 @@ export class StaffDashboardPage implements OnInit {
   isLoadingPatients = false;
   isLoadingEvents = false;
   isSavingPatient = false;
+  isSavingProfile = false;
   archivingPatientId: string | null = null;
   isSavingEvent = false;
   isSavingStatus = false;
@@ -63,6 +64,8 @@ export class StaffDashboardPage implements OnInit {
   statusErrorMessage = '';
   activityErrorMessage = '';
   sessionErrorMessage = '';
+  profileMessage = '';
+  profileErrorMessage = '';
   successMessage = '';
 
   readonly eventTypes: PatientEventType[] = ['SURGERY', 'EXAM', 'VISIT', 'STATE_CHANGE', 'DISCHARGE', 'OTHER'];
@@ -72,6 +75,12 @@ export class StaffDashboardPage implements OnInit {
   readonly patientForm = this.formBuilder.group({
     displayName: ['', [Validators.required, Validators.maxLength(160)]],
     linkCode: ['', [Validators.required, Validators.maxLength(40), Validators.pattern(/^[A-Za-z0-9-]+$/)]],
+  });
+
+  readonly profileForm = this.formBuilder.group({
+    firstName: ['', [Validators.required, Validators.maxLength(120)]],
+    lastName: ['', [Validators.required, Validators.maxLength(120)]],
+    phoneNumber: ['', [Validators.maxLength(40)]],
   });
 
   readonly eventForm = this.formBuilder.group({
@@ -107,11 +116,43 @@ export class StaffDashboardPage implements OnInit {
     this.authService.validateSession().subscribe({
       next: (user) => {
         this.user = user;
+        this.patchProfileForm(user);
       },
       error: () => {
         this.authService.logout().subscribe(() => {
           void this.router.navigate(['/auth/login']);
         });
+      },
+    });
+  }
+
+  updateProfile(): void {
+    if (this.profileForm.invalid || this.isSavingProfile) {
+      this.profileForm.markAllAsTouched();
+      this.profileErrorMessage = 'Revisa nombre, apellido y telefono antes de guardar.';
+      return;
+    }
+
+    const raw = this.profileForm.getRawValue();
+    this.isSavingProfile = true;
+    this.profileMessage = '';
+    this.profileErrorMessage = '';
+    this.successMessage = '';
+
+    this.authService.updateProfile({
+      firstName: raw.firstName ?? '',
+      lastName: raw.lastName ?? '',
+      phoneNumber: raw.phoneNumber || null,
+    }).subscribe({
+      next: (user) => {
+        this.user = user;
+        this.patchProfileForm(user);
+        this.isSavingProfile = false;
+        this.profileMessage = 'Perfil staff actualizado.';
+      },
+      error: (error) => {
+        this.isSavingProfile = false;
+        this.profileErrorMessage = error?.error?.message ?? 'No pudimos actualizar tu perfil.';
       },
     });
   }
@@ -591,6 +632,19 @@ export class StaffDashboardPage implements OnInit {
   isPatientFieldInvalid(controlName: keyof typeof this.patientForm.controls): boolean {
     const control = this.patientForm.controls[controlName];
     return control.invalid && (control.touched || control.dirty);
+  }
+
+  isProfileFieldInvalid(controlName: keyof typeof this.profileForm.controls): boolean {
+    const control = this.profileForm.controls[controlName];
+    return control.invalid && (control.touched || control.dirty);
+  }
+
+  private patchProfileForm(user: UserDto): void {
+    this.profileForm.patchValue({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phoneNumber: user.phoneNumber ?? '',
+    });
   }
 
   private cleanOptional(value: string | null | undefined): string | null {
