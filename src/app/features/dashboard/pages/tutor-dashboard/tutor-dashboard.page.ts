@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -31,6 +32,7 @@ export class TutorDashboardPage implements OnInit {
   private readonly patientStatusService = inject(PatientStatusService);
   private readonly patientEventService = inject(PatientEventService);
   private readonly notificationPreferenceService = inject(NotificationPreferenceService);
+  private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
 
   user: UserDto | null = this.authService.getCurrentUser();
@@ -52,8 +54,11 @@ export class TutorDashboardPage implements OnInit {
   isLoadingNotifications = false;
   isLoadingNotificationPreferences = false;
   isSavingNotificationPreferences = false;
+  isSavingProfile = false;
   notificationActionId: number | null = null;
   errorMessage = '';
+  profileMessage = '';
+  profileErrorMessage = '';
   activityErrorMessage = '';
   sessionErrorMessage = '';
   linkErrorMessage = '';
@@ -61,6 +66,12 @@ export class TutorDashboardPage implements OnInit {
   notificationErrorMessage = '';
   notificationPreferenceMessage = '';
   notificationPreferenceErrorMessage = '';
+
+  readonly profileForm = this.formBuilder.group({
+    firstName: ['', [Validators.required, Validators.maxLength(120)]],
+    lastName: ['', [Validators.required, Validators.maxLength(120)]],
+    phoneNumber: ['', [Validators.maxLength(40)]],
+  });
 
   ngOnInit(): void {
     this.refreshSession();
@@ -83,6 +94,7 @@ export class TutorDashboardPage implements OnInit {
     this.authService.validateSession().subscribe({
       next: (user) => {
         this.user = user;
+        this.patchProfileForm(user);
         this.isRefreshing = false;
       },
       error: () => {
@@ -91,6 +103,36 @@ export class TutorDashboardPage implements OnInit {
         this.authService.logout().subscribe(() => {
           void this.router.navigate(['/auth/login']);
         });
+      },
+    });
+  }
+
+  updateProfile(): void {
+    if (this.profileForm.invalid || this.isSavingProfile) {
+      this.profileForm.markAllAsTouched();
+      this.profileErrorMessage = 'Revisa nombre, apellido y telefono antes de guardar.';
+      return;
+    }
+
+    const raw = this.profileForm.getRawValue();
+    this.isSavingProfile = true;
+    this.profileMessage = '';
+    this.profileErrorMessage = '';
+
+    this.authService.updateProfile({
+      firstName: raw.firstName ?? '',
+      lastName: raw.lastName ?? '',
+      phoneNumber: raw.phoneNumber || null,
+    }).subscribe({
+      next: (user) => {
+        this.user = user;
+        this.patchProfileForm(user);
+        this.isSavingProfile = false;
+        this.profileMessage = 'Perfil actualizado correctamente.';
+      },
+      error: (error) => {
+        this.isSavingProfile = false;
+        this.profileErrorMessage = error?.error?.message ?? 'No pudimos actualizar tu perfil.';
       },
     });
   }
@@ -408,6 +450,19 @@ export class TutorDashboardPage implements OnInit {
   logout(): void {
     this.authService.logout().subscribe(() => {
       void this.router.navigate(['/auth/login']);
+    });
+  }
+
+  isProfileFieldInvalid(controlName: keyof typeof this.profileForm.controls): boolean {
+    const control = this.profileForm.controls[controlName];
+    return control.invalid && (control.touched || control.dirty);
+  }
+
+  private patchProfileForm(user: UserDto): void {
+    this.profileForm.patchValue({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phoneNumber: user.phoneNumber ?? '',
     });
   }
 }

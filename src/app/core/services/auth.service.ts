@@ -15,6 +15,7 @@ import {
   RegisterRequest,
   RevokeOtherSessionsRequest,
   UserDto,
+  UserProfileUpdateRequest,
 } from '../models/auth.models';
 import { StorageService } from './storage.service';
 
@@ -56,7 +57,14 @@ export class AuthService {
   validateSession(): Observable<UserDto> {
     return this.http.get<ApiResponse<UserDto>>(`${this.apiUrl}/auth/validate`).pipe(
       map((response) => response.data),
-      tap((user) => this.currentUserSubject.next(user)),
+      tap((user) => this.storeUser(user)),
+    );
+  }
+
+  updateProfile(request: UserProfileUpdateRequest): Observable<UserDto> {
+    return this.http.put<ApiResponse<UserDto>>(`${this.apiUrl}/auth/profile`, request).pipe(
+      map((response) => response.data),
+      tap((user) => this.storeUser(user)),
     );
   }
 
@@ -159,6 +167,11 @@ export class AuthService {
 
     this.storage.saveSession(session);
     this.currentUserSubject.next(data.user);
+  }
+
+  private storeUser(user: UserDto): void {
+    this.storage.saveUser(user);
+    this.currentUserSubject.next(user);
   }
 
   private clearLocalSession(): void {

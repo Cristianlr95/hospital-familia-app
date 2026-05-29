@@ -20,6 +20,47 @@
   </section>
 
   <main class="staff-grid">
+    <section class="panel profile-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Cuenta</p>
+          <h2>Perfil staff</h2>
+        </div>
+        <ion-badge color="primary">{{ user?.roles?.join(', ') }}</ion-badge>
+      </div>
+
+      <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
+        <div class="form-grid">
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Nombre</ion-label>
+            <ion-input formControlName="firstName"></ion-input>
+          </ion-item>
+
+          <ion-item lines="none" class="field">
+            <ion-label position="stacked">Apellido</ion-label>
+            <ion-input formControlName="lastName"></ion-input>
+          </ion-item>
+        </div>
+        <ion-note color="danger" *ngIf="isProfileFieldInvalid('firstName') || isProfileFieldInvalid('lastName')">
+          Nombre y apellido son obligatorios.
+        </ion-note>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Telefono de contacto</ion-label>
+          <ion-input type="tel" inputmode="tel" formControlName="phoneNumber"></ion-input>
+        </ion-item>
+
+        <p class="staff-email" *ngIf="user">Email institucional: {{ user.email }}</p>
+        <p class="success-message inline-success" *ngIf="profileMessage">{{ profileMessage }}</p>
+        <p class="error-message inline-error" *ngIf="profileErrorMessage">{{ profileErrorMessage }}</p>
+
+        <ion-button expand="block" type="submit" [disabled]="isSavingProfile">
+          <ion-spinner *ngIf="isSavingProfile" name="crescent"></ion-spinner>
+          <span *ngIf="!isSavingProfile">Guardar perfil</span>
+        </ion-button>
+      </form>
+    </section>
+
     <section class="panel patients-panel">
       <div class="panel-heading">
         <div>
