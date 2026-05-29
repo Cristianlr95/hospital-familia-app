@@ -9,6 +9,9 @@ import {
   LoginRequest,
   LoginResponse,
   LogoutRequest,
+  PasswordResetConfirmRequest,
+  PasswordResetRequest,
+  PasswordResetRequestResponse,
   RegisterRequest,
   RevokeOtherSessionsRequest,
   UserDto,
@@ -35,6 +38,18 @@ export class AuthService {
   register(request: RegisterRequest): Observable<UserDto> {
     return this.http.post<ApiResponse<UserDto>>(`${this.apiUrl}/auth/register`, request).pipe(
       map((response) => response.data),
+    );
+  }
+
+  requestPasswordReset(request: PasswordResetRequest): Observable<PasswordResetRequestResponse> {
+    return this.http.post<ApiResponse<PasswordResetRequestResponse>>(`${this.apiUrl}/auth/password-reset/request`, request).pipe(
+      map((response) => response.data),
+    );
+  }
+
+  confirmPasswordReset(request: PasswordResetConfirmRequest): Observable<void> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/auth/password-reset/confirm`, request).pipe(
+      map(() => void 0),
     );
   }
 
