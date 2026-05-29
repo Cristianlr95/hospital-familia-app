@@ -19,6 +19,21 @@ export interface RegisterRequest {
   phoneNumber?: string | null;
 }
 
+export interface PasswordResetRequest {
+  email: string;
+}
+
+export interface PasswordResetRequestResponse {
+  accepted: boolean;
+  devResetToken?: string | null;
+}
+
+export interface PasswordResetConfirmRequest {
+  token: string;
+  password: string;
+  confirmPassword: string;
+}
+
 export interface UserDto {
   id: number;
   email: string;
