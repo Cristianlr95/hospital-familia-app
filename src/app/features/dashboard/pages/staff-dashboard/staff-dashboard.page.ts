@@ -44,6 +44,7 @@ export class StaffDashboardPage implements OnInit {
   isLoadingPatients = false;
   isLoadingEvents = false;
   isSavingPatient = false;
+  archivingPatientId: string | null = null;
   isSavingEvent = false;
   isSavingStatus = false;
   isRevokingOtherSessions = false;
@@ -296,6 +297,43 @@ export class StaffDashboardPage implements OnInit {
 
   usePatient(patient: StaffPatientDto): void {
     this.selectPatient(patient.publicId);
+  }
+
+  archivePatient(patient: StaffPatientDto): void {
+    if (this.archivingPatientId) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Archivar a ${patient.displayName} desactivara su codigo ${patient.linkCode} para nuevas vinculaciones.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.archivingPatientId = patient.publicId;
+    this.patientErrorMessage = '';
+    this.successMessage = '';
+
+    this.staffPatientService.deactivatePatient(patient.publicId).subscribe({
+      next: () => {
+        this.archivingPatientId = null;
+        this.patients = this.patients.filter((item) => item.publicId !== patient.publicId);
+        if (this.selectedPatientPublicId === patient.publicId) {
+          this.selectedPatientPublicId = '';
+          this.eventForm.patchValue({ patientPublicId: '' });
+          this.statusForm.patchValue({ patientPublicId: '' });
+          this.events = [];
+        }
+        this.successMessage = 'Paciente archivado. El codigo ya no acepta nuevas solicitudes.';
+        this.loadActivityFeed();
+      },
+      error: (error) => {
+        this.archivingPatientId = null;
+        this.patientErrorMessage = error?.error?.message ?? 'No pudimos archivar el paciente.';
+      },
+    });
   }
 
   loadEvents(patientPublicId = this.eventForm.controls.patientPublicId.value ?? ''): void {

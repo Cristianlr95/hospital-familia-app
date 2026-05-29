@@ -148,6 +148,14 @@
   align-items: center;
 }
 
+.patient-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
 .patient-row p {
   word-break: break-word;
 }

@@ -21,4 +21,10 @@ export class StaffPatientService {
       map((response) => response.data),
     );
   }
+
+  deactivatePatient(publicId: string): Observable<StaffPatientDto> {
+    return this.http.patch<ApiResponse<StaffPatientDto>>(`${this.apiUrl}/${publicId}/deactivate`, {}).pipe(
+      map((response) => response.data),
+    );
+  }
 }
