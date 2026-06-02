@@ -144,6 +144,65 @@
   border-color: #c7d2fe;
 }
 
+.review-panel {
+  background: #ecfeff;
+  border-color: #a5f3fc;
+}
+
+.review-summary {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  margin: 0.9rem 0;
+}
+
+.review-summary article {
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(14, 116, 144, 0.16);
+  border-radius: var(--hf-radius);
+  padding: 0.8rem;
+}
+
+.review-summary strong {
+  color: var(--hf-text);
+  display: block;
+  font-size: 1.45rem;
+  font-weight: 900;
+}
+
+.review-summary span {
+  color: var(--hf-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.review-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.review-row {
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(14, 116, 144, 0.14);
+  border-radius: var(--hf-radius);
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.review-row h3 {
+  color: var(--hf-text);
+  font-size: 0.98rem;
+  font-weight: 850;
+  margin: 0;
+}
+
+.review-row p,
+.review-timestamp {
+  margin: 0.2rem 0 0;
+}
+
 .profile-panel ion-button[type='submit'] {
   --border-radius: var(--hf-radius);
   margin-top: 0.5rem;
@@ -348,6 +407,10 @@
   }
 
   .profile-panel {
+    grid-column: 1 / -1;
+  }
+
+  .review-panel {
     grid-column: 1 / -1;
   }
 

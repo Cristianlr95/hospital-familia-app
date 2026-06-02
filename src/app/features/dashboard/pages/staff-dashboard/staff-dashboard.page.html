@@ -61,6 +61,64 @@
       </form>
     </section>
 
+    <section class="panel review-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Salida beta</p>
+          <h2>Checklist de revision</h2>
+        </div>
+        <div class="panel-controls">
+          <ion-badge [color]="reviewProgressPercent() === 100 ? 'success' : 'warning'">
+            {{ reviewProgressLabel() }}
+          </ion-badge>
+          <ion-button fill="clear" size="small" (click)="loadReviewReadiness()" [disabled]="isLoadingReviewReadiness">
+            Actualizar
+          </ion-button>
+        </div>
+      </div>
+
+      <ion-spinner *ngIf="isLoadingReviewReadiness" name="crescent"></ion-spinner>
+      <p *ngIf="!isLoadingReviewReadiness && !reviewReadiness">
+        Carga el checklist para validar si existen datos minimos de revision beta.
+      </p>
+
+      <div class="review-summary" *ngIf="reviewReadiness">
+        <article>
+          <strong>{{ reviewReadiness.activePatientCount }}</strong>
+          <span>Pacientes activos</span>
+        </article>
+        <article>
+          <strong>{{ reviewReadiness.pendingLinkRequestCount }}</strong>
+          <span>Solicitudes pendientes</span>
+        </article>
+        <article>
+          <strong>{{ reviewReadiness.approvedLinkCount }}</strong>
+          <span>Vinculos aprobados</span>
+        </article>
+        <article>
+          <strong>{{ reviewReadiness.upcomingEventCount }}</strong>
+          <span>Eventos futuros</span>
+        </article>
+      </div>
+
+      <div class="review-list" *ngIf="reviewReadiness">
+        <article class="review-row" *ngFor="let check of reviewReadiness.checks">
+          <ion-badge [color]="check.passed ? 'success' : 'warning'">
+            {{ check.passed ? 'OK' : 'Pendiente' }}
+          </ion-badge>
+          <div>
+            <h3>{{ check.label }}</h3>
+            <p>{{ check.detail }}</p>
+          </div>
+        </article>
+      </div>
+
+      <p class="review-timestamp" *ngIf="reviewReadiness">
+        Ultima revision: {{ reviewReadiness.generatedAt | date: 'short' }}
+      </p>
+      <p class="error-message inline-error" *ngIf="reviewReadinessErrorMessage">{{ reviewReadinessErrorMessage }}</p>
+    </section>
+
     <section class="panel patients-panel">
       <div class="panel-heading">
         <div>
