@@ -12,6 +12,8 @@ import { LinkingService } from '../../../linking/services/linking.service';
 import { StaffPatientDto } from '../../../patient/models/staff-patient.models';
 import { StaffPatientService } from '../../../patient/services/staff-patient.service';
 import { PatientStatusService } from '../../../patient/services/patient-status.service';
+import { ReviewReadinessDto } from '../../../review/models/review-readiness.models';
+import { ReviewReadinessService } from '../../../review/services/review-readiness.service';
 
 @Component({
   selector: 'app-staff-dashboard-page',
@@ -26,6 +28,7 @@ export class StaffDashboardPage implements OnInit {
   private readonly staffPatientService = inject(StaffPatientService);
   private readonly eventService = inject(PatientEventService);
   private readonly patientStatusService = inject(PatientStatusService);
+  private readonly reviewReadinessService = inject(ReviewReadinessService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
 
@@ -37,12 +40,14 @@ export class StaffDashboardPage implements OnInit {
   patients: StaffPatientDto[] = [];
   selectedPatientPublicId = '';
   events: PatientEventDto[] = [];
+  reviewReadiness: ReviewReadinessDto | null = null;
   isLoadingActivity = false;
   isLoadingSessions = false;
   isLoadingRequests = false;
   isLoadingHistory = false;
   isLoadingPatients = false;
   isLoadingEvents = false;
+  isLoadingReviewReadiness = false;
   isSavingPatient = false;
   isSavingProfile = false;
   archivingPatientId: string | null = null;
@@ -60,6 +65,7 @@ export class StaffDashboardPage implements OnInit {
   patientErrorMessage = '';
   patientFormErrorMessage = '';
   eventErrorMessage = '';
+  reviewReadinessErrorMessage = '';
   eventFormErrorMessage = '';
   statusErrorMessage = '';
   activityErrorMessage = '';
@@ -108,6 +114,7 @@ export class StaffDashboardPage implements OnInit {
     this.loadActivityFeed();
     this.loadSessions();
     this.loadPatients();
+    this.loadReviewReadiness();
     this.loadPendingRequests();
     this.loadHistory();
   }
@@ -237,6 +244,26 @@ export class StaffDashboardPage implements OnInit {
     });
   }
 
+  loadReviewReadiness(): void {
+    if (this.isLoadingReviewReadiness) {
+      return;
+    }
+
+    this.isLoadingReviewReadiness = true;
+    this.reviewReadinessErrorMessage = '';
+
+    this.reviewReadinessService.getCurrentReadiness().subscribe({
+      next: (readiness) => {
+        this.reviewReadiness = readiness;
+        this.isLoadingReviewReadiness = false;
+      },
+      error: (error) => {
+        this.isLoadingReviewReadiness = false;
+        this.reviewReadinessErrorMessage = error?.error?.message ?? 'No pudimos cargar el checklist beta.';
+      },
+    });
+  }
+
   createPatient(): void {
     if (this.patientForm.invalid || this.isSavingPatient) {
       this.patientForm.markAllAsTouched();
@@ -260,6 +287,7 @@ export class StaffDashboardPage implements OnInit {
         this.patients = [patient, ...this.patients.filter((item) => item.publicId !== patient.publicId)];
         this.patientForm.reset();
         this.selectPatient(patient.publicId);
+        this.loadReviewReadiness();
       },
       error: (error) => {
         this.isSavingPatient = false;
@@ -280,6 +308,7 @@ export class StaffDashboardPage implements OnInit {
         this.loadPendingRequests();
         this.loadHistory();
         this.loadActivityFeed();
+        this.loadReviewReadiness();
       },
       error: (error) => {
         this.actionRequestId = null;
@@ -321,6 +350,7 @@ export class StaffDashboardPage implements OnInit {
         this.loadPendingRequests();
         this.loadHistory();
         this.loadActivityFeed();
+        this.loadReviewReadiness();
       },
       error: (error) => {
         this.actionRequestId = null;
@@ -369,6 +399,7 @@ export class StaffDashboardPage implements OnInit {
         }
         this.successMessage = 'Paciente archivado. El codigo ya no acepta nuevas solicitudes.';
         this.loadActivityFeed();
+        this.loadReviewReadiness();
       },
       error: (error) => {
         this.archivingPatientId = null;
@@ -457,6 +488,7 @@ export class StaffDashboardPage implements OnInit {
         this.successMessage = 'Evento creado correctamente.';
         this.loadEvents(raw.patientPublicId ?? '');
         this.loadActivityFeed();
+        this.loadReviewReadiness();
         this.eventForm.patchValue({
           title: '',
           description: '',
@@ -497,6 +529,7 @@ export class StaffDashboardPage implements OnInit {
         this.isSavingStatus = false;
         this.successMessage = 'Estado visible actualizado para la familia.';
         this.loadActivityFeed();
+        this.loadReviewReadiness();
       },
       error: (error) => {
         this.isSavingStatus = false;
@@ -514,6 +547,7 @@ export class StaffDashboardPage implements OnInit {
         this.events = this.events.map((current) => current.id === updated.id ? updated : current);
         this.successMessage = 'Estado de evento actualizado.';
         this.loadActivityFeed();
+        this.loadReviewReadiness();
       },
       error: (error) => {
         this.eventErrorMessage = error?.error?.message ?? 'No pudimos actualizar el estado del evento.';
@@ -569,6 +603,20 @@ export class StaffDashboardPage implements OnInit {
       return 'warning';
     }
     return 'medium';
+  }
+
+  reviewProgressLabel(): string {
+    if (!this.reviewReadiness?.totalChecks) {
+      return '0/0';
+    }
+    return `${this.reviewReadiness.passedChecks}/${this.reviewReadiness.totalChecks}`;
+  }
+
+  reviewProgressPercent(): number {
+    if (!this.reviewReadiness?.totalChecks) {
+      return 0;
+    }
+    return Math.round((this.reviewReadiness.passedChecks / this.reviewReadiness.totalChecks) * 100);
   }
 
   revokeSession(session: AuthSessionItemDto): void {
