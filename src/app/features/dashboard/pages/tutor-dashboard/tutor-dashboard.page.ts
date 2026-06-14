@@ -6,6 +6,8 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { AuthSessionItemDto, UserDto } from '../../../../core/models/auth.models';
 import { ActivityFeedItemDto } from '../../../activity/models/activity-feed.models';
 import { ActivityFeedService } from '../../../activity/services/activity-feed.service';
+import { ContactRequestDto } from '../../../contact/models/contact-request.models';
+import { ContactRequestService } from '../../../contact/services/contact-request.service';
 import { LinkingService } from '../../../linking/services/linking.service';
 import { LinkRequestDto, LinkedPatientDto } from '../../../linking/models/linking.models';
 import { PatientEventDto } from '../../../events/models/patient-event.models';
@@ -29,6 +31,7 @@ export class TutorDashboardPage implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly activityFeedService = inject(ActivityFeedService);
   private readonly linkingService = inject(LinkingService);
+  private readonly contactRequestService = inject(ContactRequestService);
   private readonly patientStatusService = inject(PatientStatusService);
   private readonly patientEventService = inject(PatientEventService);
   private readonly notificationPreferenceService = inject(NotificationPreferenceService);
@@ -43,6 +46,7 @@ export class TutorDashboardPage implements OnInit {
   patientStatuses: PatientStatusDto[] = [];
   upcomingEvents: PatientEventDto[] = [];
   notifications: NotificationDto[] = [];
+  contactRequests: ContactRequestDto[] = [];
   notificationPreferences: NotificationPreferenceDto | null = null;
   isRefreshing = false;
   isLoadingActivity = false;
@@ -53,6 +57,8 @@ export class TutorDashboardPage implements OnInit {
   isLoadingPatientOverview = false;
   isLoadingNotifications = false;
   isLoadingNotificationPreferences = false;
+  isLoadingContactRequests = false;
+  isSendingContactRequest = false;
   isSavingNotificationPreferences = false;
   isSavingProfile = false;
   notificationActionId: number | null = null;
@@ -66,11 +72,18 @@ export class TutorDashboardPage implements OnInit {
   notificationErrorMessage = '';
   notificationPreferenceMessage = '';
   notificationPreferenceErrorMessage = '';
+  contactRequestMessage = '';
+  contactRequestErrorMessage = '';
 
   readonly profileForm = this.formBuilder.group({
     firstName: ['', [Validators.required, Validators.maxLength(120)]],
     lastName: ['', [Validators.required, Validators.maxLength(120)]],
     phoneNumber: ['', [Validators.maxLength(40)]],
+  });
+
+  readonly contactForm = this.formBuilder.group({
+    patientPublicId: ['', [Validators.required]],
+    message: ['', [Validators.required, Validators.maxLength(500)]],
   });
 
   ngOnInit(): void {
@@ -81,6 +94,7 @@ export class TutorDashboardPage implements OnInit {
     this.loadPatientOverview();
     this.loadNotifications();
     this.loadNotificationPreferences();
+    this.loadContactRequests();
   }
 
   refreshSession(): void {
@@ -152,6 +166,9 @@ export class TutorDashboardPage implements OnInit {
       next: ({ patients, requests }) => {
         this.linkedPatients = patients;
         this.linkRequests = requests;
+        if (!this.contactForm.controls.patientPublicId.value && patients.length) {
+          this.contactForm.patchValue({ patientPublicId: patients[0].patientPublicId });
+        }
         this.isLoadingLinks = false;
       },
       error: (error) => {
@@ -280,6 +297,55 @@ export class TutorDashboardPage implements OnInit {
     });
   }
 
+  loadContactRequests(): void {
+    if (this.isLoadingContactRequests) {
+      return;
+    }
+
+    this.isLoadingContactRequests = true;
+    this.contactRequestErrorMessage = '';
+
+    this.contactRequestService.getMyRequests().subscribe({
+      next: (requests) => {
+        this.contactRequests = requests;
+        this.isLoadingContactRequests = false;
+      },
+      error: (error) => {
+        this.isLoadingContactRequests = false;
+        this.contactRequestErrorMessage = error?.error?.message ?? 'No pudimos cargar tus solicitudes de contacto.';
+      },
+    });
+  }
+
+  sendContactRequest(): void {
+    if (this.contactForm.invalid || this.isSendingContactRequest) {
+      this.contactForm.markAllAsTouched();
+      this.contactRequestErrorMessage = 'Selecciona un paciente y describe brevemente que necesitas.';
+      return;
+    }
+
+    const raw = this.contactForm.getRawValue();
+    this.isSendingContactRequest = true;
+    this.contactRequestMessage = '';
+    this.contactRequestErrorMessage = '';
+
+    this.contactRequestService.create({
+      patientPublicId: raw.patientPublicId ?? '',
+      message: raw.message ?? '',
+    }).subscribe({
+      next: (request) => {
+        this.isSendingContactRequest = false;
+        this.contactRequests = [request, ...this.contactRequests.filter((item) => item.id !== request.id)];
+        this.contactForm.patchValue({ message: '' });
+        this.contactRequestMessage = 'Solicitud enviada al equipo del hospital.';
+      },
+      error: (error) => {
+        this.isSendingContactRequest = false;
+        this.contactRequestErrorMessage = error?.error?.message ?? 'No pudimos enviar la solicitud de contacto.';
+      },
+    });
+  }
+
   updateNotificationPreference(
     key: 'stateChangesEnabled' | 'eventsEnabled' | 'linkingUpdatesEnabled' | 'quietHoursEnabled',
     event: Event,
@@ -382,6 +448,7 @@ export class TutorDashboardPage implements OnInit {
       LINKING_APPROVED: 'Vinculacion aprobada',
       LINKING_REJECTED: 'Vinculacion rechazada',
       LINKING_REVOKED: 'Acceso revocado',
+      CONTACT_REQUEST_RESOLVED: 'Contacto staff',
     };
 
     return labels[type] ?? type;
@@ -455,6 +522,11 @@ export class TutorDashboardPage implements OnInit {
 
   isProfileFieldInvalid(controlName: keyof typeof this.profileForm.controls): boolean {
     const control = this.profileForm.controls[controlName];
+    return control.invalid && (control.touched || control.dirty);
+  }
+
+  isContactFieldInvalid(controlName: keyof typeof this.contactForm.controls): boolean {
+    const control = this.contactForm.controls[controlName];
     return control.invalid && (control.touched || control.dirty);
   }
 

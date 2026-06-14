@@ -5,6 +5,8 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { AuthSessionItemDto, UserDto } from '../../../../core/models/auth.models';
 import { ActivityFeedItemDto } from '../../../activity/models/activity-feed.models';
 import { ActivityFeedService } from '../../../activity/services/activity-feed.service';
+import { ContactRequestDto } from '../../../contact/models/contact-request.models';
+import { ContactRequestService } from '../../../contact/services/contact-request.service';
 import { PatientEventDto, PatientEventStatus, PatientEventType } from '../../../events/models/patient-event.models';
 import { PatientEventService } from '../../../events/services/patient-event.service';
 import { LinkHistoryItemDto, LinkStatus, PendingLinkRequestDto } from '../../../linking/models/linking.models';
@@ -24,6 +26,7 @@ import { ReviewReadinessService } from '../../../review/services/review-readines
 export class StaffDashboardPage implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly activityFeedService = inject(ActivityFeedService);
+  private readonly contactRequestService = inject(ContactRequestService);
   private readonly linkingService = inject(LinkingService);
   private readonly staffPatientService = inject(StaffPatientService);
   private readonly eventService = inject(PatientEventService);
@@ -40,6 +43,7 @@ export class StaffDashboardPage implements OnInit {
   patients: StaffPatientDto[] = [];
   selectedPatientPublicId = '';
   events: PatientEventDto[] = [];
+  contactRequests: ContactRequestDto[] = [];
   reviewReadiness: ReviewReadinessDto | null = null;
   isLoadingActivity = false;
   isLoadingSessions = false;
@@ -47,6 +51,7 @@ export class StaffDashboardPage implements OnInit {
   isLoadingHistory = false;
   isLoadingPatients = false;
   isLoadingEvents = false;
+  isLoadingContactRequests = false;
   isLoadingReviewReadiness = false;
   isSavingPatient = false;
   isSavingProfile = false;
@@ -56,6 +61,7 @@ export class StaffDashboardPage implements OnInit {
   isRevokingOtherSessions = false;
   actionRequestId: number | null = null;
   sessionActionId: string | null = null;
+  resolvingContactRequestId: number | null = null;
   rejectingRequestId: number | null = null;
   rejectReason = '';
   rejectReasonTouched = false;
@@ -65,6 +71,7 @@ export class StaffDashboardPage implements OnInit {
   patientErrorMessage = '';
   patientFormErrorMessage = '';
   eventErrorMessage = '';
+  contactRequestErrorMessage = '';
   reviewReadinessErrorMessage = '';
   eventFormErrorMessage = '';
   statusErrorMessage = '';
@@ -73,6 +80,7 @@ export class StaffDashboardPage implements OnInit {
   profileMessage = '';
   profileErrorMessage = '';
   successMessage = '';
+  contactResolutionNotes: Record<number, string> = {};
 
   readonly eventTypes: PatientEventType[] = ['SURGERY', 'EXAM', 'VISIT', 'STATE_CHANGE', 'DISCHARGE', 'OTHER'];
   readonly eventStatuses: PatientEventStatus[] = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
@@ -115,6 +123,7 @@ export class StaffDashboardPage implements OnInit {
     this.loadSessions();
     this.loadPatients();
     this.loadReviewReadiness();
+    this.loadContactRequests();
     this.loadPendingRequests();
     this.loadHistory();
   }
@@ -260,6 +269,30 @@ export class StaffDashboardPage implements OnInit {
       error: (error) => {
         this.isLoadingReviewReadiness = false;
         this.reviewReadinessErrorMessage = error?.error?.message ?? 'No pudimos cargar el checklist beta.';
+      },
+    });
+  }
+
+  loadContactRequests(): void {
+    if (this.isLoadingContactRequests) {
+      return;
+    }
+
+    this.isLoadingContactRequests = true;
+    this.contactRequestErrorMessage = '';
+
+    this.contactRequestService.getOpenRequestsForStaff().subscribe({
+      next: (requests) => {
+        this.contactRequests = requests;
+        this.contactResolutionNotes = requests.reduce<Record<number, string>>((notes, request) => {
+          notes[request.id] = this.contactResolutionNotes[request.id] ?? '';
+          return notes;
+        }, {});
+        this.isLoadingContactRequests = false;
+      },
+      error: (error) => {
+        this.isLoadingContactRequests = false;
+        this.contactRequestErrorMessage = error?.error?.message ?? 'No pudimos cargar las solicitudes de contacto.';
       },
     });
   }
@@ -457,6 +490,32 @@ export class StaffDashboardPage implements OnInit {
     }
 
     return this.historyItems.filter((item) => item.status === this.historyFilter);
+  }
+
+  resolveContactRequest(request: ContactRequestDto): void {
+    if (this.resolvingContactRequestId) {
+      return;
+    }
+
+    this.resolvingContactRequestId = request.id;
+    this.contactRequestErrorMessage = '';
+    this.successMessage = '';
+
+    this.contactRequestService.resolve(request.id, {
+      note: this.cleanOptional(this.contactResolutionNotes[request.id]),
+    }).subscribe({
+      next: () => {
+        this.resolvingContactRequestId = null;
+        this.contactRequests = this.contactRequests.filter((item) => item.id !== request.id);
+        delete this.contactResolutionNotes[request.id];
+        this.successMessage = 'Solicitud de contacto resuelta y notificada al tutor.';
+        this.loadReviewReadiness();
+      },
+      error: (error) => {
+        this.resolvingContactRequestId = null;
+        this.contactRequestErrorMessage = error?.error?.message ?? 'No pudimos resolver la solicitud de contacto.';
+      },
+    });
   }
 
   createEvent(): void {
