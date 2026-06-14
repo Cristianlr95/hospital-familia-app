@@ -78,6 +78,7 @@
 .event-row,
 .history-row,
 .activity-row,
+.contact-request-row,
 .session-row,
 .row-actions {
   align-items: flex-start;
@@ -91,6 +92,7 @@
 .event-row,
 .history-row,
 .activity-row,
+.contact-request-row,
 .session-row {
   justify-content: space-between;
 }
@@ -100,6 +102,7 @@
 .event-row h3,
 .history-row h3,
 .activity-row h3,
+.contact-request-row h3,
 .session-row h3 {
   color: var(--hf-text);
   font-weight: 850;
@@ -111,6 +114,7 @@
 .event-list,
 .history-list,
 .activity-list,
+.contact-request-list,
 .session-list {
   display: grid;
   gap: 0.75rem;
@@ -122,6 +126,7 @@
 .event-row,
 .history-row,
 .activity-row,
+.contact-request-row,
 .session-row {
   background: #f9fafb;
   border: 1px solid var(--hf-soft-border);
@@ -137,6 +142,29 @@
 .patients-panel {
   background: #f8fafc;
   border-color: #cbd5e1;
+}
+
+.contact-requests-panel {
+  background: #ecfeff;
+  border-color: #a5f3fc;
+}
+
+.contact-request-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.8fr);
+}
+
+.resolve-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.resolve-form .field {
+  margin-bottom: 0;
+}
+
+.resolve-form ion-button {
+  justify-self: end;
 }
 
 .profile-panel {
@@ -383,27 +411,27 @@
 
   .requests-panel {
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 4;
   }
 
   .history-panel {
     grid-column: 1;
-    grid-row: 4;
+    grid-row: 5;
   }
 
   .event-form-panel {
     grid-column: 2;
-    grid-row: 2;
+    grid-row: 3;
   }
 
   .status-form-panel {
     grid-column: 2;
-    grid-row: 3;
+    grid-row: 4;
   }
 
   .events-panel {
     grid-column: 2;
-    grid-row: 4;
+    grid-row: 5;
   }
 
   .profile-panel {
@@ -411,6 +439,10 @@
   }
 
   .review-panel {
+    grid-column: 1 / -1;
+  }
+
+  .contact-requests-panel {
     grid-column: 1 / -1;
   }
 
@@ -426,10 +458,11 @@
 
   .request-row,
   .patient-row,
-  .event-row,
-  .history-row,
-  .activity-row,
-  .session-row,
+    .event-row,
+    .history-row,
+    .activity-row,
+    .contact-request-row,
+    .session-row,
   .panel-heading {
     display: grid;
     grid-template-columns: 1fr;

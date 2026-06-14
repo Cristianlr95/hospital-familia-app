@@ -105,6 +105,71 @@
       </div>
     </section>
 
+    <section class="panel contact-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Contacto staff</p>
+          <h2>Solicitar orientacion</h2>
+        </div>
+        <ion-button fill="clear" size="small" (click)="loadContactRequests()" [disabled]="isLoadingContactRequests">
+          Historial
+        </ion-button>
+      </div>
+
+      <p>
+        Usa este canal para pedir orientacion administrativa o familiar. No reemplaza los canales clinicos de urgencia del hospital.
+      </p>
+
+      <form [formGroup]="contactForm" (ngSubmit)="sendContactRequest()" class="contact-form">
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Paciente vinculado</ion-label>
+          <ion-select formControlName="patientPublicId" interface="popover" [disabled]="!linkedPatients.length">
+            <ion-select-option *ngFor="let patient of linkedPatients" [value]="patient.patientPublicId">
+              {{ patient.displayName }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-note color="danger" *ngIf="isContactFieldInvalid('patientPublicId')">
+          Debes tener un paciente aprobado para contactar al staff.
+        </ion-note>
+
+        <ion-item lines="none" class="field">
+          <ion-label position="stacked">Mensaje para staff</ion-label>
+          <ion-textarea
+            autoGrow="true"
+            formControlName="message"
+            placeholder="Ej: Necesito confirmar horario de visita o recibir orientacion administrativa."
+          ></ion-textarea>
+        </ion-item>
+        <ion-note color="danger" *ngIf="isContactFieldInvalid('message')">
+          Describe la solicitud en maximo 500 caracteres.
+        </ion-note>
+
+        <ion-button expand="block" type="submit" [disabled]="isSendingContactRequest || !linkedPatients.length">
+          <ion-spinner *ngIf="isSendingContactRequest" name="crescent"></ion-spinner>
+          <span *ngIf="!isSendingContactRequest">Enviar solicitud</span>
+        </ion-button>
+      </form>
+
+      <p class="success-message inline-success" *ngIf="contactRequestMessage">{{ contactRequestMessage }}</p>
+      <p class="error-message inline-error" *ngIf="contactRequestErrorMessage">{{ contactRequestErrorMessage }}</p>
+
+      <ion-spinner *ngIf="isLoadingContactRequests" name="crescent"></ion-spinner>
+      <div class="contact-list" *ngIf="contactRequests.length">
+        <article class="contact-row" *ngFor="let request of contactRequests">
+          <div>
+            <p class="eyebrow">{{ request.status === 'OPEN' ? 'Abierta' : 'Resuelta' }} - {{ request.createdAt | date: 'short' }}</p>
+            <h3>{{ request.patientDisplayName }}</h3>
+            <p>{{ request.message }}</p>
+            <p *ngIf="request.resolutionNote">Respuesta: {{ request.resolutionNote }}</p>
+          </div>
+          <ion-badge [color]="request.status === 'OPEN' ? 'warning' : 'success'">
+            {{ request.status === 'OPEN' ? 'En revision' : 'Resuelta' }}
+          </ion-badge>
+        </article>
+      </div>
+    </section>
+
     <section class="panel notification-panel">
       <div class="panel-heading">
         <div>

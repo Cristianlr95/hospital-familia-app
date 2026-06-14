@@ -77,6 +77,7 @@ dd {
 .request-list,
 .status-list,
 .event-list,
+.contact-list,
 .activity-list,
 .session-list,
 .notification-list,
@@ -89,6 +90,7 @@ dd {
 .patient-row,
 .request-row,
 .event-row,
+.contact-row,
 .activity-row,
 .session-row,
 .notification-row,
@@ -107,6 +109,7 @@ dd {
 .request-row h3,
 .status-row h3,
 .event-row h3,
+.contact-row h3,
 .activity-row h3,
 .session-row h3,
 .notification-row h3,
@@ -216,7 +219,18 @@ dd {
   border-color: #bbf7d0;
 }
 
+.contact-panel {
+  background: #ecfeff;
+  border-color: #a5f3fc;
+}
+
+.contact-form ion-button[type='submit'] {
+  --border-radius: var(--hf-radius);
+  margin-top: 0.75rem;
+}
+
 .event-row,
+.contact-row,
 .activity-row {
   align-items: flex-start;
 }
@@ -364,6 +378,7 @@ dd {
   .patient-row,
   .request-row,
   .event-row,
+  .contact-row,
   .activity-row,
   .session-row,
   .notification-row,

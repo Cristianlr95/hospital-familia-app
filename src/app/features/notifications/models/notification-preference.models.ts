@@ -14,7 +14,8 @@ export type NotificationType =
   | 'EVENT_UPDATED'
   | 'LINKING_APPROVED'
   | 'LINKING_REJECTED'
-  | 'LINKING_REVOKED';
+  | 'LINKING_REVOKED'
+  | 'CONTACT_REQUEST_RESOLVED';
 
 export interface NotificationDto {
   id: number;

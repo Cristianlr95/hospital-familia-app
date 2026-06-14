@@ -183,6 +183,57 @@
       </div>
     </section>
 
+    <section class="panel contact-requests-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Contacto tutor</p>
+          <h2>Solicitudes abiertas</h2>
+        </div>
+        <ion-button fill="clear" size="small" (click)="loadContactRequests()" [disabled]="isLoadingContactRequests">
+          Actualizar
+        </ion-button>
+      </div>
+
+      <ion-spinner *ngIf="isLoadingContactRequests" name="crescent"></ion-spinner>
+      <p *ngIf="!isLoadingContactRequests && !contactRequests.length">
+        No hay solicitudes de contacto abiertas.
+      </p>
+
+      <div class="contact-request-list" *ngIf="contactRequests.length">
+        <article class="contact-request-row" *ngFor="let request of contactRequests">
+          <div>
+            <p class="eyebrow">{{ request.createdAt | date: 'short' }}</p>
+            <h3>{{ request.patientDisplayName }}</h3>
+            <p>{{ request.tutorFullName }} - {{ request.tutorEmail }}</p>
+            <p>{{ request.message }}</p>
+          </div>
+
+          <form class="resolve-form" (ngSubmit)="resolveContactRequest(request)">
+            <ion-item lines="none" class="field">
+              <ion-label position="stacked">Nota de cierre opcional</ion-label>
+              <ion-textarea
+                autoGrow="true"
+                name="contactResolution-{{ request.id }}"
+                [(ngModel)]="contactResolutionNotes[request.id]"
+                placeholder="Ej: Se llamara al tutor durante la tarde."
+              ></ion-textarea>
+            </ion-item>
+            <ion-button
+              size="small"
+              type="submit"
+              color="success"
+              [disabled]="resolvingContactRequestId === request.id"
+            >
+              <ion-spinner *ngIf="resolvingContactRequestId === request.id" name="crescent"></ion-spinner>
+              <span *ngIf="resolvingContactRequestId !== request.id">Resolver</span>
+            </ion-button>
+          </form>
+        </article>
+      </div>
+
+      <p class="error-message inline-error" *ngIf="contactRequestErrorMessage">{{ contactRequestErrorMessage }}</p>
+    </section>
+
     <section class="panel requests-panel">
       <div class="panel-heading">
         <div>
