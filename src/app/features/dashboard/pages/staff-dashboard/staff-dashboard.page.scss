@@ -177,6 +177,68 @@
   border-color: #a5f3fc;
 }
 
+.beta-exit-panel {
+  background: #fefce8;
+  border-color: #fde68a;
+}
+
+.beta-progress {
+  align-items: baseline;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(202, 138, 4, 0.2);
+  border-radius: var(--hf-radius);
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.85rem 0;
+  padding: 0.75rem 0.85rem;
+}
+
+.beta-progress strong {
+  color: var(--hf-text);
+  font-size: 1.55rem;
+  font-weight: 950;
+}
+
+.beta-progress span {
+  color: var(--hf-muted);
+  font-weight: 800;
+}
+
+.beta-check-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.beta-check-row {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(202, 138, 4, 0.18);
+  border-radius: var(--hf-radius);
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.8fr);
+  padding: 0.85rem;
+}
+
+.beta-check-row h3 {
+  color: var(--hf-text);
+  font-size: 1rem;
+  font-weight: 900;
+  margin: 0;
+}
+
+.beta-check-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.beta-check-form .field {
+  margin-bottom: 0;
+}
+
+.beta-check-form ion-button {
+  justify-self: end;
+}
+
 .review-summary {
   display: grid;
   gap: 0.6rem;
@@ -442,6 +504,10 @@
     grid-column: 1 / -1;
   }
 
+  .beta-exit-panel {
+    grid-column: 1 / -1;
+  }
+
   .contact-requests-panel {
     grid-column: 1 / -1;
   }
@@ -462,6 +528,7 @@
     .history-row,
     .activity-row,
     .contact-request-row,
+    .beta-check-row,
     .session-row,
   .panel-heading {
     display: grid;
