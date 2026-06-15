@@ -119,6 +119,71 @@
       <p class="error-message inline-error" *ngIf="reviewReadinessErrorMessage">{{ reviewReadinessErrorMessage }}</p>
     </section>
 
+    <section class="panel beta-exit-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Cierre beta</p>
+          <h2>Checklist formal</h2>
+        </div>
+        <div class="panel-controls">
+          <ion-badge [color]="betaExitChecklist?.progressPercent === 100 ? 'success' : 'warning'">
+            {{ betaExitChecklist ? betaExitChecklist.progressPercent + '%' : '0%' }}
+          </ion-badge>
+          <ion-button fill="clear" size="small" (click)="loadBetaExitChecklist()" [disabled]="isLoadingBetaExitChecklist">
+            Actualizar
+          </ion-button>
+        </div>
+      </div>
+
+      <p>
+        Marca estos checks solo despues de ejecutar la revision funcional y visual correspondiente.
+      </p>
+      <ion-spinner *ngIf="isLoadingBetaExitChecklist" name="crescent"></ion-spinner>
+
+      <div class="beta-progress" *ngIf="betaExitChecklist">
+        <strong>{{ betaExitChecklist.completedChecks }}/{{ betaExitChecklist.totalChecks }}</strong>
+        <span>checks validados para salida beta</span>
+      </div>
+
+      <div class="beta-check-list" *ngIf="betaExitChecklist">
+        <article class="beta-check-row" *ngFor="let check of betaExitChecklist.checks">
+          <div>
+            <p class="eyebrow">{{ check.completed ? 'Validado' : 'Pendiente' }}</p>
+            <h3>{{ check.label }}</h3>
+            <p>{{ check.description }}</p>
+            <p *ngIf="check.completedByFullName">
+              Validado por {{ check.completedByFullName }} - {{ check.completedAt | date: 'short' }}
+            </p>
+          </div>
+
+          <form class="beta-check-form" (ngSubmit)="updateBetaExitCheck(check, !check.completed)">
+            <ion-item lines="none" class="field">
+              <ion-label position="stacked">Nota de evidencia</ion-label>
+              <ion-textarea
+                autoGrow="true"
+                name="betaNote-{{ check.id }}"
+                [(ngModel)]="betaExitNotes[check.id]"
+                placeholder="Ej: Validado en desktop 1440px y mobile 390px."
+              ></ion-textarea>
+            </ion-item>
+            <ion-button
+              size="small"
+              type="submit"
+              [color]="check.completed ? 'warning' : 'success'"
+              [disabled]="updatingBetaExitCheckId === check.id"
+            >
+              <ion-spinner *ngIf="updatingBetaExitCheckId === check.id" name="crescent"></ion-spinner>
+              <span *ngIf="updatingBetaExitCheckId !== check.id">
+                {{ check.completed ? 'Reabrir' : 'Validar' }}
+              </span>
+            </ion-button>
+          </form>
+        </article>
+      </div>
+
+      <p class="error-message inline-error" *ngIf="betaExitChecklistErrorMessage">{{ betaExitChecklistErrorMessage }}</p>
+    </section>
+
     <section class="panel patients-panel">
       <div class="panel-heading">
         <div>

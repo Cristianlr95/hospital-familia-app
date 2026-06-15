@@ -5,6 +5,8 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { AuthSessionItemDto, UserDto } from '../../../../core/models/auth.models';
 import { ActivityFeedItemDto } from '../../../activity/models/activity-feed.models';
 import { ActivityFeedService } from '../../../activity/services/activity-feed.service';
+import { BetaExitCheckDto, BetaExitChecklistDto } from '../../../beta/models/beta-exit-checklist.models';
+import { BetaExitChecklistService } from '../../../beta/services/beta-exit-checklist.service';
 import { ContactRequestDto } from '../../../contact/models/contact-request.models';
 import { ContactRequestService } from '../../../contact/services/contact-request.service';
 import { PatientEventDto, PatientEventStatus, PatientEventType } from '../../../events/models/patient-event.models';
@@ -26,6 +28,7 @@ import { ReviewReadinessService } from '../../../review/services/review-readines
 export class StaffDashboardPage implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly activityFeedService = inject(ActivityFeedService);
+  private readonly betaExitChecklistService = inject(BetaExitChecklistService);
   private readonly contactRequestService = inject(ContactRequestService);
   private readonly linkingService = inject(LinkingService);
   private readonly staffPatientService = inject(StaffPatientService);
@@ -45,6 +48,7 @@ export class StaffDashboardPage implements OnInit {
   events: PatientEventDto[] = [];
   contactRequests: ContactRequestDto[] = [];
   reviewReadiness: ReviewReadinessDto | null = null;
+  betaExitChecklist: BetaExitChecklistDto | null = null;
   isLoadingActivity = false;
   isLoadingSessions = false;
   isLoadingRequests = false;
@@ -53,6 +57,7 @@ export class StaffDashboardPage implements OnInit {
   isLoadingEvents = false;
   isLoadingContactRequests = false;
   isLoadingReviewReadiness = false;
+  isLoadingBetaExitChecklist = false;
   isSavingPatient = false;
   isSavingProfile = false;
   archivingPatientId: string | null = null;
@@ -62,6 +67,7 @@ export class StaffDashboardPage implements OnInit {
   actionRequestId: number | null = null;
   sessionActionId: string | null = null;
   resolvingContactRequestId: number | null = null;
+  updatingBetaExitCheckId: number | null = null;
   rejectingRequestId: number | null = null;
   rejectReason = '';
   rejectReasonTouched = false;
@@ -73,6 +79,7 @@ export class StaffDashboardPage implements OnInit {
   eventErrorMessage = '';
   contactRequestErrorMessage = '';
   reviewReadinessErrorMessage = '';
+  betaExitChecklistErrorMessage = '';
   eventFormErrorMessage = '';
   statusErrorMessage = '';
   activityErrorMessage = '';
@@ -81,6 +88,7 @@ export class StaffDashboardPage implements OnInit {
   profileErrorMessage = '';
   successMessage = '';
   contactResolutionNotes: Record<number, string> = {};
+  betaExitNotes: Record<number, string> = {};
 
   readonly eventTypes: PatientEventType[] = ['SURGERY', 'EXAM', 'VISIT', 'STATE_CHANGE', 'DISCHARGE', 'OTHER'];
   readonly eventStatuses: PatientEventStatus[] = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
@@ -123,6 +131,7 @@ export class StaffDashboardPage implements OnInit {
     this.loadSessions();
     this.loadPatients();
     this.loadReviewReadiness();
+    this.loadBetaExitChecklist();
     this.loadContactRequests();
     this.loadPendingRequests();
     this.loadHistory();
@@ -269,6 +278,30 @@ export class StaffDashboardPage implements OnInit {
       error: (error) => {
         this.isLoadingReviewReadiness = false;
         this.reviewReadinessErrorMessage = error?.error?.message ?? 'No pudimos cargar el checklist beta.';
+      },
+    });
+  }
+
+  loadBetaExitChecklist(): void {
+    if (this.isLoadingBetaExitChecklist) {
+      return;
+    }
+
+    this.isLoadingBetaExitChecklist = true;
+    this.betaExitChecklistErrorMessage = '';
+
+    this.betaExitChecklistService.getChecklist().subscribe({
+      next: (checklist) => {
+        this.betaExitChecklist = checklist;
+        this.betaExitNotes = checklist.checks.reduce<Record<number, string>>((notes, check) => {
+          notes[check.id] = check.notes ?? '';
+          return notes;
+        }, {});
+        this.isLoadingBetaExitChecklist = false;
+      },
+      error: (error) => {
+        this.isLoadingBetaExitChecklist = false;
+        this.betaExitChecklistErrorMessage = error?.error?.message ?? 'No pudimos cargar el checklist de salida beta.';
       },
     });
   }
@@ -514,6 +547,35 @@ export class StaffDashboardPage implements OnInit {
       error: (error) => {
         this.resolvingContactRequestId = null;
         this.contactRequestErrorMessage = error?.error?.message ?? 'No pudimos resolver la solicitud de contacto.';
+      },
+    });
+  }
+
+  updateBetaExitCheck(check: BetaExitCheckDto, completed: boolean): void {
+    if (this.updatingBetaExitCheckId) {
+      return;
+    }
+
+    this.updatingBetaExitCheckId = check.id;
+    this.betaExitChecklistErrorMessage = '';
+    this.successMessage = '';
+
+    this.betaExitChecklistService.updateCheck(check.id, {
+      completed,
+      notes: this.cleanOptional(this.betaExitNotes[check.id]),
+    }).subscribe({
+      next: (checklist) => {
+        this.betaExitChecklist = checklist;
+        this.betaExitNotes = checklist.checks.reduce<Record<number, string>>((notes, item) => {
+          notes[item.id] = item.notes ?? '';
+          return notes;
+        }, {});
+        this.updatingBetaExitCheckId = null;
+        this.successMessage = completed ? 'Check de salida beta marcado como validado.' : 'Check de salida beta reabierto.';
+      },
+      error: (error) => {
+        this.updatingBetaExitCheckId = null;
+        this.betaExitChecklistErrorMessage = error?.error?.message ?? 'No pudimos actualizar el check de salida beta.';
       },
     });
   }
