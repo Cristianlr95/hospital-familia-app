@@ -42,60 +42,68 @@
   </section>
 
   <section class="home-overview" *ngIf="activeSection === 'home'">
-    <article class="overview-card overview-card-primary">
+    <article class="priority-card status-highlight home-status" *ngIf="patientStatuses[0] as status">
       <div>
-        <p class="eyebrow">Pacientes autorizados</p>
-        <strong>{{ linkedPatients.length }}</strong>
-        <span>{{ linkedPatients.length === 1 ? 'paciente vinculado' : 'pacientes vinculados' }}</span>
+        <p class="eyebrow">{{ status.currentService }}</p>
+        <h2>{{ status.displayName }}</h2>
+        <p><strong>{{ status.careStatus }}</strong> · {{ status.currentLocation }}</p>
+        <small>Actualizado {{ status.updatedAt | date: 'd MMM, HH:mm' }}</small>
       </div>
-      <ion-button fill="clear" (click)="showSection('patients')">Ver pacientes</ion-button>
+      <ion-button fill="outline" (click)="showSection('patients')">Ver seguimiento</ion-button>
     </article>
 
-    <article class="overview-card">
+    <article class="overview-card next-event-card" *ngIf="nextActiveEvent() as nextEvent">
       <div>
         <p class="eyebrow">Próximo evento</p>
-        <strong class="overview-title">{{ upcomingEvents[0]?.title || 'Sin eventos pendientes' }}</strong>
-        <span *ngIf="upcomingEvents[0]">{{ upcomingEvents[0].scheduledAt | date: 'short' }}</span>
-        <span *ngIf="!upcomingEvents[0]">El hospital informará aquí nuevas fechas.</span>
+        <strong class="overview-title">{{ nextEvent.title }}</strong>
+        <span>{{ nextEvent.scheduledAt | date: 'EEE d MMM, HH:mm' }} · {{ nextEvent.location || 'Ubicación por confirmar' }}</span>
       </div>
       <ion-button fill="clear" (click)="showSection('patients')">Abrir agenda</ion-button>
     </article>
 
-    <article class="overview-card">
+    <article class="overview-card next-event-card" *ngIf="!nextActiveEvent()">
       <div>
-        <p class="eyebrow">Avisos nuevos</p>
-        <strong>{{ unreadNotificationsCount() }}</strong>
-        <span>{{ unreadNotificationsCount() === 1 ? 'notificación sin leer' : 'notificaciones sin leer' }}</span>
+        <p class="eyebrow">Próximo evento</p>
+        <strong class="overview-title">Sin eventos pendientes</strong>
+        <span>El hospital informará aquí nuevas fechas.</span>
       </div>
-      <ion-button fill="clear" (click)="showSection('messages')">Revisar avisos</ion-button>
+      <ion-button fill="clear" (click)="showSection('patients')">Abrir agenda</ion-button>
     </article>
 
-    <article class="overview-card">
-      <div>
-        <p class="eyebrow">Contacto hospital</p>
-        <strong>{{ openContactRequestsCount() }}</strong>
-        <span>{{ openContactRequestsCount() === 1 ? 'solicitud abierta' : 'solicitudes abiertas' }}</span>
-      </div>
-      <ion-button fill="clear" (click)="showSection('messages')">Solicitar orientación</ion-button>
-    </article>
+    <div class="overview-strip">
+      <article class="overview-card">
+        <div>
+          <p class="eyebrow">Avisos nuevos</p>
+          <strong>{{ unreadNotificationsCount() }}</strong>
+          <span>sin leer</span>
+        </div>
+        <ion-button fill="clear" (click)="showSection('messages')">Revisar</ion-button>
+      </article>
+      <article class="overview-card">
+        <div>
+          <p class="eyebrow">Solicitudes</p>
+          <strong>{{ openContactRequestsCount() }}</strong>
+          <span>{{ openContactRequestsCount() === 1 ? 'abierta' : 'abiertas' }}</span>
+        </div>
+        <ion-button fill="clear" (click)="showSection('messages')">Ver contacto</ion-button>
+      </article>
+      <article class="overview-card overview-card-primary">
+        <div>
+          <p class="eyebrow">Pacientes</p>
+          <strong>{{ linkedPatients.length }}</strong>
+          <span>{{ linkedPatients.length === 1 ? 'autorizado' : 'autorizados' }}</span>
+        </div>
+        <ion-button fill="clear" (click)="showSection('patients')">Ver</ion-button>
+      </article>
+    </div>
 
     <article class="priority-card" *ngIf="!linkedPatients.length">
       <div>
         <p class="eyebrow">Primer paso</p>
         <h2>Vincula a tu familiar</h2>
-        <p>Usa el código entregado por el hospital. La información solo será visible después de la aprobación.</p>
+        <p>Usa el código entregado por el hospital. La información será visible después de su aprobación.</p>
       </div>
       <ion-button (click)="goToLinkPatient()">Vincular paciente</ion-button>
-    </article>
-
-    <article class="priority-card status-highlight" *ngIf="patientStatuses[0] as status">
-      <div>
-        <p class="eyebrow">{{ status.currentService }}</p>
-        <h2>{{ status.displayName }}</h2>
-        <p>{{ status.careStatus }} · {{ status.currentLocation }}</p>
-        <small>Actualizado {{ status.updatedAt | date: 'short' }}</small>
-      </div>
-      <ion-button fill="outline" (click)="showSection('patients')">Ver seguimiento</ion-button>
     </article>
   </section>
 
@@ -120,7 +128,7 @@
           </article>
         </div>
 
-        <ion-button expand="block" (click)="goToLinkPatient()">
+        <ion-button fill="outline" size="small" (click)="goToLinkPatient()">
           Vincular paciente
         </ion-button>
       </ion-card-content>
@@ -168,24 +176,31 @@
     </section>
 
     <section class="panel events-panel" *ngIf="activeSection === 'patients'">
-      <p class="eyebrow">Proximos eventos</p>
-      <h2>Calendario familiar</h2>
+      <p class="eyebrow">Agenda de los próximos 30 días</p>
+      <h2>Próximo hito</h2>
 
       <p *ngIf="!isLoadingPatientOverview && !upcomingEvents.length">
         No hay eventos visibles para los pacientes aprobados.
       </p>
 
-      <div class="event-list" *ngIf="upcomingEvents.length">
-        <article class="event-row" *ngFor="let event of upcomingEvents">
+      <div class="event-list next-event-list" *ngIf="nextActiveEvent() as event">
+        <article class="event-row featured-event">
           <div>
             <p class="eyebrow">{{ eventTypeLabel(event.type) }}</p>
             <h3>{{ event.title }}</h3>
-            <p>{{ event.patientDisplayName }} - {{ event.scheduledAt | date: 'short' }}</p>
+            <p>{{ event.patientDisplayName }} · {{ event.scheduledAt | date: 'EEE d MMM, HH:mm' }}</p>
             <p *ngIf="event.location">{{ event.location }}</p>
           </div>
-          <ion-badge color="medium">{{ event.status }}</ion-badge>
+          <ion-badge color="primary">{{ eventStatusLabel(event.status) }}</ion-badge>
         </article>
       </div>
+
+      <app-family-calendar
+        *ngIf="upcomingEvents.length"
+        class="embedded-calendar"
+        [events]="upcomingEvents"
+        title="Todos los hitos por día"
+      ></app-family-calendar>
     </section>
 
     <section class="panel contact-panel" *ngIf="activeSection === 'messages'">
@@ -386,15 +401,22 @@
         Aun no hay actividad visible para tu cuenta.
       </p>
 
+      <app-family-calendar
+        *ngIf="upcomingEvents.length"
+        class="activity-calendar"
+        [events]="upcomingEvents"
+        title="Agenda familiar"
+      ></app-family-calendar>
+
       <div class="activity-list" *ngIf="activityFeed.length">
         <article class="activity-row" *ngFor="let item of activityFeed">
           <div>
             <p class="eyebrow">{{ activityKindLabel(item.kind) }} - {{ item.occurredAt | date: 'short' }}</p>
             <h3>{{ item.title }}</h3>
             <p>{{ item.patientDisplayName }}</p>
-            <p>{{ item.message }}</p>
+            <p>{{ activityMessage(item) }}</p>
           </div>
-          <ion-badge *ngIf="item.status" [color]="activityStatusColor(item)">{{ item.status }}</ion-badge>
+          <ion-badge *ngIf="item.status" [color]="activityStatusColor(item)">{{ genericStatusLabel(item.status) }}</ion-badge>
         </article>
       </div>
 
@@ -465,7 +487,13 @@
           <ion-button fill="clear" size="small" (click)="loadSessions()" [disabled]="isLoadingSessions">
             Actualizar
           </ion-button>
-          <ion-button fill="outline" size="small" color="warning" (click)="revokeOtherSessions()" [disabled]="isRevokingOtherSessions">
+          <ion-button
+            fill="outline"
+            size="small"
+            color="warning"
+            (click)="revokeOtherSessions()"
+            [disabled]="isRevokingOtherSessions || !!sessionActionId || !otherActiveSessions().length"
+          >
             Cerrar otras
           </ion-button>
         </div>
@@ -476,31 +504,87 @@
         No hay sesiones registradas para esta cuenta.
       </p>
 
-      <div class="session-list" *ngIf="sessions.length">
-        <article class="session-row" *ngFor="let session of sessions">
+      <div class="session-summary-bar" *ngIf="sessions.length">
+        <div>
+          <strong>{{ currentSession() ? 1 : 0 }}</strong>
+          <span>Este dispositivo</span>
+        </div>
+        <div>
+          <strong>{{ otherActiveSessions().length }}</strong>
+          <span>Otros accesos</span>
+        </div>
+        <div>
+          <strong>{{ closedSessions().length }}</strong>
+          <span>Sesiones cerradas</span>
+        </div>
+      </div>
+
+      <div class="session-group" *ngIf="currentSession() as session">
+        <p class="session-group-title">Este dispositivo</p>
+        <article class="session-row current-session">
           <div>
-            <p class="eyebrow">
-              {{ session.current ? 'Sesion actual' : 'Sesion registrada' }} - {{ session.createdAt | date: 'short' }}
-            </p>
-            <h3>{{ session.current ? 'Este dispositivo' : 'Otro acceso' }}</h3>
-            <p>Expira {{ session.expiresAt | date: 'short' }}</p>
-            <p *ngIf="session.revokedAt">Revocada {{ session.revokedAt | date: 'short' }}</p>
+            <p class="eyebrow">Sesión actual · {{ session.createdAt | date: 'd MMM, HH:mm' }}</p>
+            <h3>Acceso en uso</h3>
+            <p>Expira {{ session.expiresAt | date: 'd MMM, HH:mm' }}</p>
           </div>
           <div class="session-actions">
-            <ion-badge [color]="session.revoked ? 'danger' : (session.current ? 'success' : 'medium')">
-              {{ session.revoked ? 'Revocada' : (session.current ? 'Actual' : 'Activa') }}
-            </ion-badge>
+            <ion-badge color="success">Actual</ion-badge>
             <ion-button
-              *ngIf="!session.revoked"
               size="small"
               fill="outline"
               color="danger"
               (click)="revokeSession(session)"
-              [disabled]="sessionActionId === session.sessionId"
+              [disabled]="sessionActionId === session.sessionId || isRevokingOtherSessions"
             >
-              {{ session.current ? 'Cerrar aqui' : 'Revocar' }}
+              Cerrar aquí
             </ion-button>
           </div>
+        </article>
+      </div>
+
+      <div class="session-group" *ngIf="otherActiveSessions().length">
+        <p class="session-group-title">Otros dispositivos</p>
+        <article class="session-row" *ngFor="let session of visibleOtherActiveSessions()">
+          <div>
+            <p class="eyebrow">Iniciada {{ session.createdAt | date: 'd MMM, HH:mm' }}</p>
+            <h3>Otro acceso activo</h3>
+            <p>Expira {{ session.expiresAt | date: 'd MMM, HH:mm' }}</p>
+          </div>
+          <div class="session-actions">
+            <ion-badge color="medium">Activa</ion-badge>
+            <ion-button
+              size="small"
+              fill="outline"
+              color="danger"
+              (click)="revokeSession(session)"
+              [disabled]="!!sessionActionId || isRevokingOtherSessions"
+            >
+              Revocar
+            </ion-button>
+          </div>
+        </article>
+        <button
+          type="button"
+          class="session-history-toggle"
+          *ngIf="otherActiveSessions().length > 3"
+          (click)="showAllActiveSessions = !showAllActiveSessions"
+        >
+          <span>{{ showAllActiveSessions ? 'Mostrar menos accesos' : 'Ver todos los accesos' }}</span>
+          <span>{{ showAllActiveSessions ? 'Ocultar' : '+' + (otherActiveSessions().length - 3) }}</span>
+        </button>
+      </div>
+
+      <div class="session-group session-history" *ngIf="closedSessions().length">
+        <button type="button" class="session-history-toggle" (click)="showSessionHistory = !showSessionHistory">
+          <span>Historial de sesiones cerradas</span>
+          <span>{{ showSessionHistory ? 'Ocultar' : 'Ver ' + closedSessions().length }}</span>
+        </button>
+        <article class="session-row closed-session" *ngFor="let session of visibleClosedSessions()">
+          <div>
+            <p class="eyebrow">Cerrada {{ session.revokedAt | date: 'd MMM, HH:mm' }}</p>
+            <h3>Sesión revocada</h3>
+          </div>
+          <ion-badge color="light">Cerrada</ion-badge>
         </article>
       </div>
 
@@ -519,7 +603,7 @@
       <div class="request-list" *ngIf="!isLoadingLinks && linkRequests.length">
         <article class="request-row" *ngFor="let request of linkRequests">
           <div>
-            <p class="eyebrow">{{ request.status }}</p>
+            <p class="eyebrow">{{ genericStatusLabel(request.status) }}</p>
             <h3>{{ request.patientDisplayName || 'Paciente en revision' }}</h3>
             <p *ngIf="request.decisionReason">{{ request.decisionReason }}</p>
           </div>

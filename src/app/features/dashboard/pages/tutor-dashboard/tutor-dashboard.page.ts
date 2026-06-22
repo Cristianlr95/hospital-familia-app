@@ -78,6 +78,8 @@ export class TutorDashboardPage implements OnInit {
   contactRequestMessage = '';
   contactRequestErrorMessage = '';
   activeSection: TutorSection = 'home';
+  showSessionHistory = false;
+  showAllActiveSessions = false;
 
   readonly navigationItems: Array<{ id: TutorSection; label: string; icon: string }> = [
     { id: 'home', label: 'Inicio', icon: 'home-outline' },
@@ -428,7 +430,7 @@ export class TutorDashboardPage implements OnInit {
 
   eventTypeLabel(type: PatientEventDto['type']): string {
     const labels: Record<PatientEventDto['type'], string> = {
-      SURGERY: 'Cirugia',
+      SURGERY: 'Cirugía',
       EXAM: 'Examen',
       VISIT: 'Visita',
       STATE_CHANGE: 'Cambio de estado',
@@ -437,6 +439,53 @@ export class TutorDashboardPage implements OnInit {
     };
 
     return labels[type] ?? type;
+  }
+
+  eventStatusLabel(status: PatientEventDto['status']): string {
+    return {
+      SCHEDULED: 'Programado',
+      IN_PROGRESS: 'En curso',
+      COMPLETED: 'Completado',
+      CANCELLED: 'Cancelado',
+    }[status];
+  }
+
+  genericStatusLabel(status?: string | null): string {
+    if (!status) {
+      return '';
+    }
+
+    return {
+      APPROVED: 'Aprobado',
+      PENDING: 'Pendiente',
+      REJECTED: 'Rechazado',
+      REVOKED: 'Revocado',
+      SCHEDULED: 'Programado',
+      IN_PROGRESS: 'En curso',
+      COMPLETED: 'Completado',
+      CANCELLED: 'Cancelado',
+      OPEN: 'Abierta',
+      RESOLVED: 'Resuelta',
+    }[status] ?? status;
+  }
+
+  activityMessage(item: ActivityFeedItemDto): string {
+    const statusLabel = this.genericStatusLabel(item.status);
+    if (item.kind === 'EVENT' && statusLabel) {
+      const dateMatch = item.message.match(/\d{4}-\d{2}-\d{2}T[\d:.+-]+Z?/);
+      if (dateMatch) {
+        const dateLabel = new Intl.DateTimeFormat('es-CL', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(new Date(dateMatch[0]));
+        return `${statusLabel} · ${dateLabel}`;
+      }
+      return statusLabel;
+    }
+    return item.message;
   }
 
   activityKindLabel(kind: ActivityFeedItemDto['kind']): string {
@@ -536,6 +585,32 @@ export class TutorDashboardPage implements OnInit {
 
   openContactRequestsCount(): number {
     return this.contactRequests.filter((request) => request.status === 'OPEN').length;
+  }
+
+  nextActiveEvent(): PatientEventDto | null {
+    return this.upcomingEvents.find((event) => (
+      event.status === 'SCHEDULED' || event.status === 'IN_PROGRESS'
+    )) ?? null;
+  }
+
+  currentSession(): AuthSessionItemDto | null {
+    return this.sessions.find((session) => session.current && !session.revoked) ?? null;
+  }
+
+  otherActiveSessions(): AuthSessionItemDto[] {
+    return this.sessions.filter((session) => !session.current && !session.revoked);
+  }
+
+  visibleOtherActiveSessions(): AuthSessionItemDto[] {
+    return this.showAllActiveSessions ? this.otherActiveSessions() : this.otherActiveSessions().slice(0, 3);
+  }
+
+  closedSessions(): AuthSessionItemDto[] {
+    return this.sessions.filter((session) => session.revoked);
+  }
+
+  visibleClosedSessions(): AuthSessionItemDto[] {
+    return this.showSessionHistory ? this.closedSessions() : this.closedSessions().slice(0, 2);
   }
 
   logout(): void {
