@@ -86,6 +86,7 @@ export class TutorDashboardPage implements OnInit {
   activeSection: TutorSection = 'home';
   showSessionHistory = false;
   showAllActiveSessions = false;
+  selectedCalendarDate: string | null = null;
   private readonly loadedSections = new Set<TutorSection>();
 
   readonly navigationItems: Array<{ id: TutorSection; label: string; icon: string }> = [

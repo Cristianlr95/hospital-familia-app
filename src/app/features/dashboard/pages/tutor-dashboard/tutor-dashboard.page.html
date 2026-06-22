@@ -200,6 +200,7 @@
         *ngIf="upcomingEvents.length"
         class="embedded-calendar"
         [events]="upcomingEvents"
+        [(selectedDate)]="selectedCalendarDate"
         title="Todos los hitos por día"
         (visibleRangeChange)="loadVisibleEventRange($event)"
       ></app-patient-event-calendar>
@@ -407,6 +408,7 @@
         *ngIf="upcomingEvents.length"
         class="activity-calendar"
         [events]="upcomingEvents"
+        [(selectedDate)]="selectedCalendarDate"
         title="Agenda familiar"
         (visibleRangeChange)="loadVisibleEventRange($event)"
       ></app-patient-event-calendar>
