@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { IonContent } from '@ionic/angular';
-import { forkJoin, map, of, switchMap } from 'rxjs';
+import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AuthSessionItemDto, UserDto } from '../../../../core/models/auth.models';
 import { ActivityFeedItemDto } from '../../../activity/models/activity-feed.models';
@@ -11,7 +11,11 @@ import { ContactRequestDto } from '../../../contact/models/contact-request.model
 import { ContactRequestService } from '../../../contact/services/contact-request.service';
 import { LinkingService } from '../../../linking/services/linking.service';
 import { LinkRequestDto, LinkedPatientDto } from '../../../linking/models/linking.models';
-import { PatientEventDto } from '../../../events/models/patient-event.models';
+import { PatientEventDto, PatientEventRange } from '../../../events/models/patient-event.models';
+import {
+  patientEventStatusLabel,
+  patientEventTypeLabel,
+} from '../../../events/presentation/patient-event.presentation';
 import { PatientEventService } from '../../../events/services/patient-event.service';
 import {
   NotificationDto,
@@ -57,6 +61,7 @@ export class TutorDashboardPage implements OnInit {
   isRevokingOtherSessions = false;
   sessionActionId: string | null = null;
   isLoadingLinks = false;
+  isLoadingLinkRequests = false;
   isLoadingPatientOverview = false;
   isLoadingNotifications = false;
   isLoadingNotificationPreferences = false;
@@ -72,6 +77,7 @@ export class TutorDashboardPage implements OnInit {
   sessionErrorMessage = '';
   linkErrorMessage = '';
   patientOverviewErrorMessage = '';
+  patientOverviewWarningMessage = '';
   notificationErrorMessage = '';
   notificationPreferenceMessage = '';
   notificationPreferenceErrorMessage = '';
@@ -80,6 +86,8 @@ export class TutorDashboardPage implements OnInit {
   activeSection: TutorSection = 'home';
   showSessionHistory = false;
   showAllActiveSessions = false;
+  selectedCalendarDate: string | null = null;
+  private readonly loadedSections = new Set<TutorSection>();
 
   readonly navigationItems: Array<{ id: TutorSection; label: string; icon: string }> = [
     { id: 'home', label: 'Inicio', icon: 'home-outline' },
@@ -101,13 +109,11 @@ export class TutorDashboardPage implements OnInit {
 
   ngOnInit(): void {
     this.refreshSession();
-    this.loadActivityFeed();
-    this.loadSessions();
-    this.loadLinkingSummary();
+    this.loadLinkedPatients();
     this.loadPatientOverview();
     this.loadNotifications();
-    this.loadNotificationPreferences();
     this.loadContactRequests();
+    this.loadedSections.add('home');
   }
 
   refreshSession(): void {
@@ -135,7 +141,7 @@ export class TutorDashboardPage implements OnInit {
   }
 
   updateProfile(): void {
-    if (this.profileForm.invalid || this.isSavingProfile) {
+    if (this.profileForm.invalid || this.profileForm.pristine || this.isSavingProfile) {
       this.profileForm.markAllAsTouched();
       this.profileErrorMessage = 'Revisa nombre, apellido y telefono antes de guardar.';
       return;
@@ -165,6 +171,11 @@ export class TutorDashboardPage implements OnInit {
   }
 
   loadLinkingSummary(): void {
+    this.loadLinkedPatients();
+    this.loadLinkRequests();
+  }
+
+  loadLinkedPatients(): void {
     if (this.isLoadingLinks) {
       return;
     }
@@ -172,13 +183,9 @@ export class TutorDashboardPage implements OnInit {
     this.isLoadingLinks = true;
     this.linkErrorMessage = '';
 
-    forkJoin({
-      patients: this.linkingService.getMyPatients(),
-      requests: this.linkingService.getMyRequests(),
-    }).subscribe({
-      next: ({ patients, requests }) => {
+    this.linkingService.getMyPatients().subscribe({
+      next: (patients) => {
         this.linkedPatients = patients;
-        this.linkRequests = requests;
         if (!this.contactForm.controls.patientPublicId.value && patients.length) {
           this.contactForm.patchValue({ patientPublicId: patients[0].patientPublicId });
         }
@@ -187,6 +194,26 @@ export class TutorDashboardPage implements OnInit {
       error: (error) => {
         this.isLoadingLinks = false;
         this.linkErrorMessage = error?.error?.message ?? 'No pudimos cargar tus vinculaciones.';
+      },
+    });
+  }
+
+  loadLinkRequests(): void {
+    if (this.isLoadingLinkRequests) {
+      return;
+    }
+
+    this.isLoadingLinkRequests = true;
+    this.linkErrorMessage = '';
+
+    this.linkingService.getMyRequests().subscribe({
+      next: (requests) => {
+        this.linkRequests = requests;
+        this.isLoadingLinkRequests = false;
+      },
+      error: (error) => {
+        this.isLoadingLinkRequests = false;
+        this.linkErrorMessage = error?.error?.message ?? 'No pudimos cargar tus solicitudes de vinculación.';
       },
     });
   }
@@ -231,35 +258,55 @@ export class TutorDashboardPage implements OnInit {
     });
   }
 
-  loadPatientOverview(): void {
+  loadPatientOverview(range?: PatientEventRange): void {
     if (this.isLoadingPatientOverview) {
       return;
     }
 
     this.isLoadingPatientOverview = true;
     this.patientOverviewErrorMessage = '';
+    this.patientOverviewWarningMessage = '';
 
     this.patientStatusService.getMyStatuses().pipe(
       switchMap((statuses) => {
         if (!statuses.length) {
-          return of({ statuses, events: [] as PatientEventDto[] });
+          return of({
+            statuses,
+            events: [] as PatientEventDto[],
+            failedPatients: [] as string[],
+            successfulPatientIds: [] as string[],
+          });
         }
 
         return forkJoin(
-          statuses.map((status) => this.patientEventService.getUpcomingEventsForTutor(status.patientPublicId)),
+          statuses.map((status) => this.patientEventService.getUpcomingEventsForTutor(status.patientPublicId, range).pipe(
+            map((events) => ({ events, failedPatient: null as string | null })),
+            catchError(() => of({ events: [] as PatientEventDto[], failedPatient: status.displayName })),
+          )),
         ).pipe(
-          map((eventGroups) => ({
+          map((eventResults) => ({
             statuses,
-            events: ([] as PatientEventDto[]).concat(...eventGroups).sort((first, second) => (
+            events: ([] as PatientEventDto[]).concat(...eventResults.map((result) => result.events)).sort((first, second) => (
               new Date(first.scheduledAt).getTime() - new Date(second.scheduledAt).getTime()
             )),
+            failedPatients: eventResults
+              .map((result) => result.failedPatient)
+              .filter((patient): patient is string => Boolean(patient)),
+            successfulPatientIds: statuses
+              .filter((_, index) => !eventResults[index].failedPatient)
+              .map((status) => status.patientPublicId),
           })),
         );
       }),
     ).subscribe({
-      next: ({ statuses, events }) => {
+      next: ({ statuses, events, failedPatients = [], successfulPatientIds = [] }) => {
         this.patientStatuses = statuses;
-        this.upcomingEvents = events;
+        this.upcomingEvents = range
+          ? this.mergeMonthlyEvents(events, range, successfulPatientIds)
+          : events;
+        if (failedPatients.length) {
+          this.patientOverviewWarningMessage = `No pudimos actualizar la agenda de ${failedPatients.join(', ')}. Los demás pacientes siguen disponibles.`;
+        }
         this.isLoadingPatientOverview = false;
       },
       error: (error) => {
@@ -429,25 +476,11 @@ export class TutorDashboardPage implements OnInit {
   }
 
   eventTypeLabel(type: PatientEventDto['type']): string {
-    const labels: Record<PatientEventDto['type'], string> = {
-      SURGERY: 'Cirugía',
-      EXAM: 'Examen',
-      VISIT: 'Visita',
-      STATE_CHANGE: 'Cambio de estado',
-      DISCHARGE: 'Alta',
-      OTHER: 'Otro',
-    };
-
-    return labels[type] ?? type;
+    return patientEventTypeLabel(type);
   }
 
   eventStatusLabel(status: PatientEventDto['status']): string {
-    return {
-      SCHEDULED: 'Programado',
-      IN_PROGRESS: 'En curso',
-      COMPLETED: 'Completado',
-      CANCELLED: 'Cancelado',
-    }[status];
+    return patientEventStatusLabel(status);
   }
 
   genericStatusLabel(status?: string | null): string {
@@ -529,6 +562,15 @@ export class TutorDashboardPage implements OnInit {
   }
 
   revokeSession(session: AuthSessionItemDto): void {
+    const confirmed = window.confirm(
+      session.current
+        ? 'Esta acción cerrará tu sesión actual y volverás al inicio de sesión. ¿Deseas continuar?'
+        : 'Esta acción cerrará el acceso seleccionado. ¿Deseas continuar?',
+    );
+    if (!confirmed) {
+      return;
+    }
+
     this.sessionActionId = session.sessionId;
     this.sessionErrorMessage = '';
 
@@ -555,6 +597,13 @@ export class TutorDashboardPage implements OnInit {
       return;
     }
 
+    const confirmed = window.confirm(
+      `Se cerrarán ${this.otherActiveSessions().length} accesos en otros dispositivos. ¿Deseas continuar?`,
+    );
+    if (!confirmed) {
+      return;
+    }
+
     this.isRevokingOtherSessions = true;
     this.sessionErrorMessage = '';
 
@@ -576,6 +625,7 @@ export class TutorDashboardPage implements OnInit {
 
   showSection(section: TutorSection): void {
     this.activeSection = section;
+    this.loadSectionData(section);
     void this.content?.scrollToTop(220);
   }
 
@@ -594,11 +644,15 @@ export class TutorDashboardPage implements OnInit {
   }
 
   currentSession(): AuthSessionItemDto | null {
-    return this.sessions.find((session) => session.current && !session.revoked) ?? null;
+    return this.sessions.find((session) => session.current && this.sessionIsActive(session)) ?? null;
+  }
+
+  loadVisibleEventRange(range: PatientEventRange): void {
+    this.loadPatientOverview(range);
   }
 
   otherActiveSessions(): AuthSessionItemDto[] {
-    return this.sessions.filter((session) => !session.current && !session.revoked);
+    return this.sessions.filter((session) => !session.current && this.sessionIsActive(session));
   }
 
   visibleOtherActiveSessions(): AuthSessionItemDto[] {
@@ -606,11 +660,15 @@ export class TutorDashboardPage implements OnInit {
   }
 
   closedSessions(): AuthSessionItemDto[] {
-    return this.sessions.filter((session) => session.revoked);
+    return this.sessions.filter((session) => !this.sessionIsActive(session));
   }
 
   visibleClosedSessions(): AuthSessionItemDto[] {
     return this.showSessionHistory ? this.closedSessions() : this.closedSessions().slice(0, 2);
+  }
+
+  closedSessionLabel(session: AuthSessionItemDto): string {
+    return session.revoked ? 'Revocada' : 'Expirada';
   }
 
   logout(): void {
@@ -635,6 +693,53 @@ export class TutorDashboardPage implements OnInit {
       lastName: user.lastName,
       phoneNumber: user.phoneNumber ?? '',
     });
+    this.profileForm.markAsPristine();
+  }
+
+  private loadSectionData(section: TutorSection): void {
+    if (this.loadedSections.has(section)) {
+      return;
+    }
+
+    if (section === 'patients') {
+      this.loadLinkRequests();
+    }
+    if (section === 'messages') {
+      this.loadActivityFeed();
+      this.loadNotificationPreferences();
+    }
+    if (section === 'account') {
+      this.loadSessions();
+    }
+
+    this.loadedSections.add(section);
+  }
+
+  private sessionIsActive(session: AuthSessionItemDto): boolean {
+    return !session.revoked && new Date(session.expiresAt).getTime() > Date.now();
+  }
+
+  private mergeMonthlyEvents(
+    monthlyEvents: PatientEventDto[],
+    range: PatientEventRange,
+    successfulPatientIds: string[],
+  ): PatientEventDto[] {
+    const from = new Date(range.from).getTime();
+    const to = new Date(range.to).getTime();
+    const successfulPatients = new Set(successfulPatientIds);
+    const retained = this.upcomingEvents.filter((event) => {
+      const scheduledAt = new Date(event.scheduledAt).getTime();
+      const belongsToLoadedWindow = scheduledAt >= from
+        && scheduledAt < to
+        && successfulPatients.has(event.patientPublicId);
+      return !belongsToLoadedWindow;
+    });
+    const eventsById = new Map<number, PatientEventDto>();
+
+    [...retained, ...monthlyEvents].forEach((event) => eventsById.set(event.id, event));
+    return [...eventsById.values()].sort((first, second) => (
+      new Date(first.scheduledAt).getTime() - new Date(second.scheduledAt).getTime()
+    ));
   }
 }
 

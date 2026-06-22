@@ -1,0 +1,97 @@
+<section
+  class="patient-event-calendar"
+  [class.compact]="compact"
+  [attr.aria-busy]="loading"
+  aria-label="Calendario de eventos del paciente"
+>
+  <header class="calendar-header">
+    <div>
+      <p class="calendar-eyebrow">Agenda compartida</p>
+      <h3>{{ title }}</h3>
+    </div>
+    <div class="calendar-controls" aria-label="Navegación del calendario">
+      <button type="button" (click)="previousMonth()" aria-label="Mostrar mes anterior">
+        <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+      </button>
+      <button type="button" class="today-button" (click)="goToToday()">Hoy</button>
+      <button type="button" (click)="nextMonth()" aria-label="Mostrar mes siguiente">
+        <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+      </button>
+    </div>
+  </header>
+
+  <div class="loading-state" *ngIf="loading" role="status">
+    <ion-spinner name="crescent"></ion-spinner>
+    <span>Cargando agenda</span>
+  </div>
+
+  <div class="calendar-layout" *ngIf="!loading">
+    <div class="month-view">
+      <p class="month-label" aria-live="polite">{{ monthLabel }}</p>
+
+      <div class="weekday-row" aria-hidden="true">
+        <span *ngFor="let weekday of weekdayLabels">{{ weekday }}</span>
+      </div>
+
+      <div class="calendar-grid">
+        <button
+          #dayButton
+          type="button"
+          class="calendar-day"
+          *ngFor="let day of calendarDays; trackBy: trackDay"
+          [class.outside]="!day.currentMonth"
+          [class.selected]="day.key === activeDateKey"
+          [class.has-events]="day.events.length"
+          [attr.aria-label]="dayAriaLabel(day)"
+          [attr.aria-pressed]="day.key === activeDateKey"
+          [attr.data-date]="day.key"
+          [attr.tabindex]="day.key === activeDateKey ? 0 : -1"
+          (click)="selectDay(day)"
+          (keydown)="handleDayKeydown($event, day)"
+        >
+          <span>{{ day.dayNumber }}</span>
+          <span class="event-dots" *ngIf="day.events.length" aria-hidden="true">
+            <i
+              *ngFor="let event of day.events.slice(0, 3)"
+              [class]="'event-dot ' + eventColor(event.type)"
+            ></i>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <section class="day-agenda" aria-live="polite" aria-label="Eventos del día seleccionado">
+      <div class="day-agenda-heading">
+        <div>
+          <p class="calendar-eyebrow">Detalle del día</p>
+          <h4>{{ selectedDateLabel() }}</h4>
+        </div>
+        <span>{{ selectedEvents.length }} {{ selectedEvents.length === 1 ? 'hito' : 'hitos' }}</span>
+      </div>
+
+      <p class="empty-day" *ngIf="!selectedEvents.length">No hay hitos programados para este día.</p>
+
+      <button
+        type="button"
+        class="agenda-event"
+        *ngFor="let event of selectedEvents; trackBy: trackEvent"
+        [attr.aria-label]="eventAriaLabel(event)"
+        (click)="selectEvent(event)"
+      >
+        <span [class]="'event-mark ' + eventColor(event.type)" aria-hidden="true"></span>
+        <span class="event-copy">
+          <small>{{ eventTypeLabel(event.type) }} · {{ event.scheduledAt | date: 'HH:mm' }}</small>
+          <strong>{{ event.title }}</strong>
+          <span>{{ event.patientDisplayName }}</span>
+          <span *ngIf="event.service">{{ event.service }}</span>
+          <span *ngIf="event.location">{{ event.location }}</span>
+          <span *ngIf="event.responsibleStaff">Responsable: {{ event.responsibleStaff }}</span>
+          <span *ngIf="event.estimatedDurationMinutes">
+            Duración estimada: {{ event.estimatedDurationMinutes }} min
+          </span>
+        </span>
+        <span class="event-status">{{ eventStatusLabel(event.status) }}</span>
+      </button>
+    </section>
+  </div>
+</section>
