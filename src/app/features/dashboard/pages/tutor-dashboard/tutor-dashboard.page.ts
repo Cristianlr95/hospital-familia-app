@@ -1,6 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { IonContent } from '@ionic/angular';
 import { forkJoin, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AuthSessionItemDto, UserDto } from '../../../../core/models/auth.models';
@@ -28,6 +29,8 @@ import { PatientStatusService } from '../../../patient/services/patient-status.s
   standalone: false,
 })
 export class TutorDashboardPage implements OnInit {
+  @ViewChild(IonContent) private content?: IonContent;
+
   private readonly authService = inject(AuthService);
   private readonly activityFeedService = inject(ActivityFeedService);
   private readonly linkingService = inject(LinkingService);
@@ -74,6 +77,14 @@ export class TutorDashboardPage implements OnInit {
   notificationPreferenceErrorMessage = '';
   contactRequestMessage = '';
   contactRequestErrorMessage = '';
+  activeSection: TutorSection = 'home';
+
+  readonly navigationItems: Array<{ id: TutorSection; label: string; icon: string }> = [
+    { id: 'home', label: 'Inicio', icon: 'home-outline' },
+    { id: 'patients', label: 'Pacientes', icon: 'people-outline' },
+    { id: 'messages', label: 'Avisos', icon: 'notifications-outline' },
+    { id: 'account', label: 'Cuenta', icon: 'person-circle-outline' },
+  ];
 
   readonly profileForm = this.formBuilder.group({
     firstName: ['', [Validators.required, Validators.maxLength(120)]],
@@ -514,6 +525,19 @@ export class TutorDashboardPage implements OnInit {
     void this.router.navigate(['/link-patient']);
   }
 
+  showSection(section: TutorSection): void {
+    this.activeSection = section;
+    void this.content?.scrollToTop(220);
+  }
+
+  unreadNotificationsCount(): number {
+    return this.notifications.filter((notification) => !notification.read).length;
+  }
+
+  openContactRequestsCount(): number {
+    return this.contactRequests.filter((request) => request.status === 'OPEN').length;
+  }
+
   logout(): void {
     this.authService.logout().subscribe(() => {
       void this.router.navigate(['/auth/login']);
@@ -538,3 +562,5 @@ export class TutorDashboardPage implements OnInit {
     });
   }
 }
+
+type TutorSection = 'home' | 'patients' | 'messages' | 'account';

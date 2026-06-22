@@ -1,6 +1,21 @@
 <ion-header class="app-shell" [translucent]="true">
   <ion-toolbar>
     <ion-title>Hospital Familia</ion-title>
+    <nav class="desktop-nav" aria-label="Navegación principal">
+      <button
+        type="button"
+        *ngFor="let item of navigationItems"
+        [class.active]="activeSection === item.id"
+        [attr.aria-current]="activeSection === item.id ? 'page' : null"
+        (click)="showSection(item.id)"
+      >
+        <ion-icon [name]="item.icon"></ion-icon>
+        <span>{{ item.label }}</span>
+        <ion-badge *ngIf="item.id === 'messages' && unreadNotificationsCount()" color="danger">
+          {{ unreadNotificationsCount() }}
+        </ion-badge>
+      </button>
+    </nav>
     <ion-buttons slot="end">
       <ion-button (click)="logout()">Salir</ion-button>
     </ion-buttons>
@@ -8,16 +23,84 @@
 </ion-header>
 
 <ion-content class="dashboard-content" [fullscreen]="true">
-  <section class="hero">
+  <section class="hero" *ngIf="activeSection === 'home'">
     <p class="eyebrow">Vista tutor</p>
-    <h1>Hola{{ user ? ', ' + user.firstName : '' }}.</h1>
+    <h1>Hola{{ user ? ', ' + user.firstName : '' }}. Te acompañamos.</h1>
     <p class="hero-copy">
-      Tu cuenta ya esta activa. El siguiente paso es vincular un paciente con autorizacion del hospital.
+      Revisa lo más importante de tus pacientes autorizados y accede rápidamente a avisos, eventos o contacto con el hospital.
     </p>
   </section>
 
+  <section class="section-heading" *ngIf="activeSection !== 'home'">
+    <p class="eyebrow">Hospital Familia</p>
+    <h1>
+      {{ activeSection === 'patients' ? 'Pacientes y seguimiento' : activeSection === 'messages' ? 'Avisos y contacto' : 'Cuenta y seguridad' }}
+    </h1>
+    <p>
+      {{ activeSection === 'patients' ? 'Consulta el estado autorizado, próximos eventos y vinculaciones.' : activeSection === 'messages' ? 'Revisa notificaciones, actividad y solicitudes al equipo hospitalario.' : 'Administra tus datos personales y sesiones activas.' }}
+    </p>
+  </section>
+
+  <section class="home-overview" *ngIf="activeSection === 'home'">
+    <article class="overview-card overview-card-primary">
+      <div>
+        <p class="eyebrow">Pacientes autorizados</p>
+        <strong>{{ linkedPatients.length }}</strong>
+        <span>{{ linkedPatients.length === 1 ? 'paciente vinculado' : 'pacientes vinculados' }}</span>
+      </div>
+      <ion-button fill="clear" (click)="showSection('patients')">Ver pacientes</ion-button>
+    </article>
+
+    <article class="overview-card">
+      <div>
+        <p class="eyebrow">Próximo evento</p>
+        <strong class="overview-title">{{ upcomingEvents[0]?.title || 'Sin eventos pendientes' }}</strong>
+        <span *ngIf="upcomingEvents[0]">{{ upcomingEvents[0].scheduledAt | date: 'short' }}</span>
+        <span *ngIf="!upcomingEvents[0]">El hospital informará aquí nuevas fechas.</span>
+      </div>
+      <ion-button fill="clear" (click)="showSection('patients')">Abrir agenda</ion-button>
+    </article>
+
+    <article class="overview-card">
+      <div>
+        <p class="eyebrow">Avisos nuevos</p>
+        <strong>{{ unreadNotificationsCount() }}</strong>
+        <span>{{ unreadNotificationsCount() === 1 ? 'notificación sin leer' : 'notificaciones sin leer' }}</span>
+      </div>
+      <ion-button fill="clear" (click)="showSection('messages')">Revisar avisos</ion-button>
+    </article>
+
+    <article class="overview-card">
+      <div>
+        <p class="eyebrow">Contacto hospital</p>
+        <strong>{{ openContactRequestsCount() }}</strong>
+        <span>{{ openContactRequestsCount() === 1 ? 'solicitud abierta' : 'solicitudes abiertas' }}</span>
+      </div>
+      <ion-button fill="clear" (click)="showSection('messages')">Solicitar orientación</ion-button>
+    </article>
+
+    <article class="priority-card" *ngIf="!linkedPatients.length">
+      <div>
+        <p class="eyebrow">Primer paso</p>
+        <h2>Vincula a tu familiar</h2>
+        <p>Usa el código entregado por el hospital. La información solo será visible después de la aprobación.</p>
+      </div>
+      <ion-button (click)="goToLinkPatient()">Vincular paciente</ion-button>
+    </article>
+
+    <article class="priority-card status-highlight" *ngIf="patientStatuses[0] as status">
+      <div>
+        <p class="eyebrow">{{ status.currentService }}</p>
+        <h2>{{ status.displayName }}</h2>
+        <p>{{ status.careStatus }} · {{ status.currentLocation }}</p>
+        <small>Actualizado {{ status.updatedAt | date: 'short' }}</small>
+      </div>
+      <ion-button fill="outline" (click)="showSection('patients')">Ver seguimiento</ion-button>
+    </article>
+  </section>
+
   <main class="dashboard-grid">
-    <ion-card class="empty-card">
+    <ion-card class="empty-card" *ngIf="activeSection === 'patients'">
       <ion-card-header>
         <ion-card-subtitle>{{ linkedPatients.length ? 'Pacientes vinculados' : 'Sin pacientes vinculados' }}</ion-card-subtitle>
         <ion-card-title>{{ linkedPatients.length ? 'Seguimiento autorizado' : 'Vincula tu primer paciente' }}</ion-card-title>
@@ -43,7 +126,7 @@
       </ion-card-content>
     </ion-card>
 
-    <section class="panel status-panel">
+    <section class="panel status-panel" *ngIf="activeSection === 'patients'">
       <p class="eyebrow">Estado autorizado</p>
       <h2>Resumen clinico visible</h2>
       <ion-spinner *ngIf="isLoadingPatientOverview" name="crescent"></ion-spinner>
@@ -84,7 +167,7 @@
       </ion-button>
     </section>
 
-    <section class="panel events-panel">
+    <section class="panel events-panel" *ngIf="activeSection === 'patients'">
       <p class="eyebrow">Proximos eventos</p>
       <h2>Calendario familiar</h2>
 
@@ -105,7 +188,7 @@
       </div>
     </section>
 
-    <section class="panel contact-panel">
+    <section class="panel contact-panel" *ngIf="activeSection === 'messages'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Contacto staff</p>
@@ -170,7 +253,7 @@
       </div>
     </section>
 
-    <section class="panel notification-panel">
+    <section class="panel notification-panel" *ngIf="activeSection === 'messages'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Notificaciones</p>
@@ -287,7 +370,7 @@
       <p class="error-message inline-error" *ngIf="notificationPreferenceErrorMessage">{{ notificationPreferenceErrorMessage }}</p>
     </section>
 
-    <section class="panel activity-panel">
+    <section class="panel activity-panel" *ngIf="activeSection === 'messages'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Actividad</p>
@@ -318,7 +401,7 @@
       <p class="error-message inline-error" *ngIf="activityErrorMessage">{{ activityErrorMessage }}</p>
     </section>
 
-    <section class="panel">
+    <section class="panel" *ngIf="activeSection === 'account'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Cuenta</p>
@@ -372,7 +455,7 @@
       </form>
     </section>
 
-    <section class="panel sessions-panel">
+    <section class="panel sessions-panel" *ngIf="activeSection === 'account'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Seguridad</p>
@@ -424,7 +507,7 @@
       <p class="error-message inline-error" *ngIf="sessionErrorMessage">{{ sessionErrorMessage }}</p>
     </section>
 
-    <section class="panel calm-panel">
+    <section class="panel calm-panel" *ngIf="activeSection === 'patients'">
       <p class="eyebrow">Vinculaciones</p>
       <h2>Vinculacion tutor-paciente</h2>
       <ion-spinner *ngIf="isLoadingLinks" name="crescent"></ion-spinner>
@@ -452,3 +535,21 @@
 
   <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
 </ion-content>
+
+<nav class="mobile-nav" aria-label="Navegación móvil">
+  <button
+    type="button"
+    *ngFor="let item of navigationItems"
+    [class.active]="activeSection === item.id"
+    [attr.aria-current]="activeSection === item.id ? 'page' : null"
+    (click)="showSection(item.id)"
+  >
+    <span class="mobile-nav-icon">
+      <ion-icon [name]="item.icon"></ion-icon>
+      <ion-badge *ngIf="item.id === 'messages' && unreadNotificationsCount()" color="danger">
+        {{ unreadNotificationsCount() }}
+      </ion-badge>
+    </span>
+    <span>{{ item.label }}</span>
+  </button>
+</nav>

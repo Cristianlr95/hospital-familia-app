@@ -1,6 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { IonContent } from '@ionic/angular';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AuthSessionItemDto, UserDto } from '../../../../core/models/auth.models';
 import { ActivityFeedItemDto } from '../../../activity/models/activity-feed.models';
@@ -26,6 +27,8 @@ import { ReviewReadinessService } from '../../../review/services/review-readines
   standalone: false,
 })
 export class StaffDashboardPage implements OnInit {
+  @ViewChild(IonContent) private content?: IonContent;
+
   private readonly authService = inject(AuthService);
   private readonly activityFeedService = inject(ActivityFeedService);
   private readonly betaExitChecklistService = inject(BetaExitChecklistService);
@@ -89,6 +92,15 @@ export class StaffDashboardPage implements OnInit {
   successMessage = '';
   contactResolutionNotes: Record<number, string> = {};
   betaExitNotes: Record<number, string> = {};
+  activeSection: StaffSection = 'home';
+
+  readonly navigationItems: Array<{ id: StaffSection; label: string; icon: string }> = [
+    { id: 'home', label: 'Inicio', icon: 'home-outline' },
+    { id: 'patients', label: 'Pacientes', icon: 'people-outline' },
+    { id: 'requests', label: 'Solicitudes', icon: 'file-tray-full-outline' },
+    { id: 'calendar', label: 'Agenda', icon: 'calendar-outline' },
+    { id: 'account', label: 'Más', icon: 'grid-outline' },
+  ];
 
   readonly eventTypes: PatientEventType[] = ['SURGERY', 'EXAM', 'VISIT', 'STATE_CHANGE', 'DISCHARGE', 'OTHER'];
   readonly eventStatuses: PatientEventStatus[] = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
@@ -788,6 +800,11 @@ export class StaffDashboardPage implements OnInit {
     });
   }
 
+  showSection(section: StaffSection): void {
+    this.activeSection = section;
+    void this.content?.scrollToTop(220);
+  }
+
   isFieldInvalid(controlName: keyof typeof this.eventForm.controls): boolean {
     const control = this.eventForm.controls[controlName];
     return control.invalid && (control.touched || control.dirty);
@@ -823,3 +840,5 @@ export class StaffDashboardPage implements OnInit {
     return value.trim();
   }
 }
+
+type StaffSection = 'home' | 'patients' | 'requests' | 'calendar' | 'account';
