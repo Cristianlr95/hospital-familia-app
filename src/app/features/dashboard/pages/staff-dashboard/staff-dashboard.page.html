@@ -135,7 +135,7 @@
         <p class="success-message inline-success" *ngIf="profileMessage">{{ profileMessage }}</p>
         <p class="error-message inline-error" *ngIf="profileErrorMessage">{{ profileErrorMessage }}</p>
 
-        <ion-button expand="block" type="submit" [disabled]="isSavingProfile">
+        <ion-button expand="block" type="submit" [disabled]="isSavingProfile || profileForm.pristine">
           <ion-spinner *ngIf="isSavingProfile" name="crescent"></ion-spinner>
           <span *ngIf="!isSavingProfile">Guardar perfil</span>
         </ion-button>
@@ -515,7 +515,9 @@
             <p>{{ item.message }}</p>
             <p *ngIf="item.actorName">Responsable: {{ item.actorName }}</p>
           </div>
-          <ion-badge *ngIf="item.status" [color]="activityStatusColor(item)">{{ item.status }}</ion-badge>
+          <ion-badge *ngIf="item.status" [color]="activityStatusColor(item)">
+            {{ activityStatusLabel(item.status) }}
+          </ion-badge>
         </article>
       </div>
 
@@ -533,7 +535,7 @@
             Actualizar
           </ion-button>
           <ion-button fill="outline" size="small" color="warning" (click)="revokeOtherSessions()" [disabled]="isRevokingOtherSessions">
-            Cerrar otras
+            Cerrar otras ({{ otherActiveSessions().length }})
           </ion-button>
         </div>
       </div>
@@ -544,31 +546,58 @@
       </p>
 
       <div class="session-list" *ngIf="sessions.length">
-        <article class="session-row" *ngFor="let session of sessions">
+        <article class="session-row" *ngIf="currentSession() as session">
           <div>
-            <p class="eyebrow">
-              {{ session.current ? 'Sesion actual' : 'Sesion registrada' }} - {{ session.createdAt | date: 'short' }}
-            </p>
-            <h3>{{ session.current ? 'Este dispositivo' : 'Otro acceso' }}</h3>
+            <p class="eyebrow">Sesión actual · {{ session.createdAt | date: 'short' }}</p>
+            <h3>Este dispositivo</h3>
             <p>Expira {{ session.expiresAt | date: 'short' }}</p>
-            <p *ngIf="session.revokedAt">Revocada {{ session.revokedAt | date: 'short' }}</p>
           </div>
           <div class="session-actions">
-            <ion-badge [color]="session.revoked ? 'danger' : (session.current ? 'success' : 'medium')">
-              {{ session.revoked ? 'Revocada' : (session.current ? 'Actual' : 'Activa') }}
-            </ion-badge>
+            <ion-badge color="success">Actual</ion-badge>
             <ion-button
-              *ngIf="!session.revoked"
               size="small"
               fill="outline"
               color="danger"
               (click)="revokeSession(session)"
-              [disabled]="sessionActionId === session.sessionId"
+              [disabled]="sessionActionId !== null || isRevokingOtherSessions"
             >
-              {{ session.current ? 'Cerrar aqui' : 'Revocar' }}
+              Cerrar aquí
             </ion-button>
           </div>
         </article>
+
+        <article class="session-row" *ngFor="let session of otherActiveSessions()">
+          <div>
+            <p class="eyebrow">Sesión activa · {{ session.createdAt | date: 'short' }}</p>
+            <h3>Otro acceso</h3>
+            <p>Expira {{ session.expiresAt | date: 'short' }}</p>
+          </div>
+          <div class="session-actions">
+            <ion-badge color="medium">Activa</ion-badge>
+            <ion-button
+              size="small"
+              fill="outline"
+              color="danger"
+              (click)="revokeSession(session)"
+              [disabled]="sessionActionId !== null || isRevokingOtherSessions"
+            >
+              Revocar
+            </ion-button>
+          </div>
+        </article>
+
+        <div class="session-history" *ngIf="closedSessions().length">
+          <p class="eyebrow">Historial cerrado</p>
+          <article class="session-row closed-session" *ngFor="let session of closedSessions()">
+            <div>
+              <p class="eyebrow">
+                {{ closedSessionLabel(session) }} · {{ (session.revokedAt || session.expiresAt) | date: 'short' }}
+              </p>
+              <h3>{{ session.current ? 'Este dispositivo' : 'Otro acceso' }}</h3>
+            </div>
+            <ion-badge color="light">{{ closedSessionLabel(session) }}</ion-badge>
+          </article>
+        </div>
       </div>
 
       <p class="error-message inline-error" *ngIf="sessionErrorMessage">{{ sessionErrorMessage }}</p>
@@ -700,37 +729,57 @@
     <section class="panel events-panel" *ngIf="activeSection === 'calendar'">
       <div class="panel-heading">
         <div>
-          <p class="eyebrow">Eventos</p>
-          <h2>{{ selectedPatientPublicId ? 'Paciente seleccionado' : 'Buscar por paciente' }}</h2>
+          <p class="eyebrow">Agenda clínica visible</p>
+          <h2>{{ selectedPatientPublicId ? 'Calendario del paciente' : 'Selecciona un paciente' }}</h2>
         </div>
         <ion-button fill="clear" size="small" (click)="loadEvents()" [disabled]="isLoadingEvents">
-          Cargar
+          Actualizar
         </ion-button>
       </div>
 
-      <ion-spinner *ngIf="isLoadingEvents" name="crescent"></ion-spinner>
+      <p class="calendar-guidance" *ngIf="!selectedPatientPublicId">
+        Selecciona un paciente desde Pacientes o ingresa su ID público para consultar su agenda.
+      </p>
       <p *ngIf="!isLoadingEvents && selectedPatientPublicId && !events.length">
-        No hay eventos proximos para este paciente.
+        No hay eventos registrados para este paciente.
       </p>
 
-      <div class="event-list" *ngIf="events.length">
-        <article class="event-row" *ngFor="let event of events">
+      <app-patient-event-calendar
+        *ngIf="selectedPatientPublicId"
+        class="staff-event-calendar"
+        [events]="events"
+        [(selectedDate)]="selectedCalendarDate"
+        [loading]="isLoadingEvents"
+        title="Hitos por día"
+        (eventSelected)="selectCalendarEvent($event)"
+        (visibleRangeChange)="loadVisibleEventRange($event)"
+      ></app-patient-event-calendar>
+
+      <article class="selected-event-panel" *ngIf="selectedCalendarEvent as event">
+        <div class="selected-event-copy">
           <div>
             <p class="eyebrow">{{ eventTypeLabel(event.type) }}</p>
             <h3>{{ event.title }}</h3>
-            <p>{{ event.scheduledAt | date: 'short' }} - {{ event.location || 'Sin ubicacion' }}</p>
-            <p *ngIf="event.responsibleStaff">{{ event.responsibleStaff }}</p>
+            <p>{{ event.scheduledAt | date: 'EEE d MMM, HH:mm' }} · {{ event.location || 'Sin ubicación' }}</p>
+            <p *ngIf="event.responsibleStaff">Responsable: {{ event.responsibleStaff }}</p>
           </div>
+          <ion-badge color="primary">{{ eventStatusLabel(event.status) }}</ion-badge>
+        </div>
+
+        <div class="event-status-control">
+          <ion-label>Actualizar estado visible</ion-label>
           <ion-select
             interface="popover"
             [value]="event.status"
             (ionChange)="changeEventStatus(event, $event.detail.value)"
-            aria-label="Estado del evento"
+            aria-label="Actualizar estado del evento seleccionado"
           >
-            <ion-select-option *ngFor="let status of eventStatuses" [value]="status">{{ status }}</ion-select-option>
+            <ion-select-option *ngFor="let status of eventStatuses" [value]="status">
+              {{ eventStatusLabel(status) }}
+            </ion-select-option>
           </ion-select>
-        </article>
-      </div>
+        </div>
+      </article>
 
       <p class="error-message inline-error" *ngIf="eventErrorMessage">{{ eventErrorMessage }}</p>
     </section>

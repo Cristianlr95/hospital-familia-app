@@ -40,3 +40,10 @@ export interface PatientEventCreateRequest {
 export interface PatientEventStatusUpdateRequest {
   status: PatientEventStatus;
 }
+
+export interface PatientEventRange {
+  /** Inclusive ISO-8601 UTC instant. */
+  from: string;
+  /** Exclusive ISO-8601 UTC instant. */
+  to: string;
+}

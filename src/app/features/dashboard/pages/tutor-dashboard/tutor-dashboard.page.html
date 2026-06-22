@@ -170,6 +170,7 @@
       </div>
 
       <p class="error-message inline-error" *ngIf="patientOverviewErrorMessage">{{ patientOverviewErrorMessage }}</p>
+      <p class="warning-message" *ngIf="patientOverviewWarningMessage">{{ patientOverviewWarningMessage }}</p>
       <ion-button fill="clear" size="small" (click)="loadPatientOverview()" [disabled]="isLoadingPatientOverview">
         Actualizar estado
       </ion-button>
@@ -195,12 +196,13 @@
         </article>
       </div>
 
-      <app-family-calendar
+      <app-patient-event-calendar
         *ngIf="upcomingEvents.length"
         class="embedded-calendar"
         [events]="upcomingEvents"
         title="Todos los hitos por día"
-      ></app-family-calendar>
+        (visibleRangeChange)="loadVisibleEventRange($event)"
+      ></app-patient-event-calendar>
     </section>
 
     <section class="panel contact-panel" *ngIf="activeSection === 'messages'">
@@ -401,12 +403,13 @@
         Aun no hay actividad visible para tu cuenta.
       </p>
 
-      <app-family-calendar
+      <app-patient-event-calendar
         *ngIf="upcomingEvents.length"
         class="activity-calendar"
         [events]="upcomingEvents"
         title="Agenda familiar"
-      ></app-family-calendar>
+        (visibleRangeChange)="loadVisibleEventRange($event)"
+      ></app-patient-event-calendar>
 
       <div class="activity-list" *ngIf="activityFeed.length">
         <article class="activity-row" *ngFor="let item of activityFeed">
@@ -470,7 +473,7 @@
         <p class="success-message inline-success" *ngIf="profileMessage">{{ profileMessage }}</p>
         <p class="error-message inline-error" *ngIf="profileErrorMessage">{{ profileErrorMessage }}</p>
 
-        <ion-button expand="block" type="submit" [disabled]="isSavingProfile">
+        <ion-button expand="block" type="submit" [disabled]="isSavingProfile || profileForm.pristine">
           <ion-spinner *ngIf="isSavingProfile" name="crescent"></ion-spinner>
           <span *ngIf="!isSavingProfile">Guardar perfil</span>
         </ion-button>
@@ -581,10 +584,11 @@
         </button>
         <article class="session-row closed-session" *ngFor="let session of visibleClosedSessions()">
           <div>
-            <p class="eyebrow">Cerrada {{ session.revokedAt | date: 'd MMM, HH:mm' }}</p>
-            <h3>Sesión revocada</h3>
+            <p class="eyebrow" *ngIf="session.revoked">Cerrada {{ session.revokedAt | date: 'd MMM, HH:mm' }}</p>
+            <p class="eyebrow" *ngIf="!session.revoked">Expiró {{ session.expiresAt | date: 'd MMM, HH:mm' }}</p>
+            <h3>Sesión {{ closedSessionLabel(session) | lowercase }}</h3>
           </div>
-          <ion-badge color="light">Cerrada</ion-badge>
+          <ion-badge color="light">{{ closedSessionLabel(session) }}</ion-badge>
         </article>
       </div>
 
@@ -594,13 +598,13 @@
     <section class="panel calm-panel" *ngIf="activeSection === 'patients'">
       <p class="eyebrow">Vinculaciones</p>
       <h2>Vinculacion tutor-paciente</h2>
-      <ion-spinner *ngIf="isLoadingLinks" name="crescent"></ion-spinner>
+      <ion-spinner *ngIf="isLoadingLinks || isLoadingLinkRequests" name="crescent"></ion-spinner>
 
-      <p *ngIf="!isLoadingLinks && !linkRequests.length">
+      <p *ngIf="!isLoadingLinks && !isLoadingLinkRequests && !linkRequests.length">
         Aun no tienes solicitudes. Ingresa el codigo entregado por el hospital para comenzar.
       </p>
 
-      <div class="request-list" *ngIf="!isLoadingLinks && linkRequests.length">
+      <div class="request-list" *ngIf="!isLoadingLinks && !isLoadingLinkRequests && linkRequests.length">
         <article class="request-row" *ngFor="let request of linkRequests">
           <div>
             <p class="eyebrow">{{ genericStatusLabel(request.status) }}</p>
@@ -611,7 +615,7 @@
       </div>
 
       <p class="error-message inline-error" *ngIf="linkErrorMessage">{{ linkErrorMessage }}</p>
-      <ion-button fill="clear" size="small" (click)="loadLinkingSummary()" [disabled]="isLoadingLinks">
+      <ion-button fill="clear" size="small" (click)="loadLinkingSummary()" [disabled]="isLoadingLinks || isLoadingLinkRequests">
         Actualizar vinculaciones
       </ion-button>
     </section>

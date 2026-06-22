@@ -10,7 +10,16 @@ import { BetaExitCheckDto, BetaExitChecklistDto } from '../../../beta/models/bet
 import { BetaExitChecklistService } from '../../../beta/services/beta-exit-checklist.service';
 import { ContactRequestDto } from '../../../contact/models/contact-request.models';
 import { ContactRequestService } from '../../../contact/services/contact-request.service';
-import { PatientEventDto, PatientEventStatus, PatientEventType } from '../../../events/models/patient-event.models';
+import {
+  PatientEventDto,
+  PatientEventRange,
+  PatientEventStatus,
+  PatientEventType,
+} from '../../../events/models/patient-event.models';
+import {
+  patientEventStatusLabel,
+  patientEventTypeLabel,
+} from '../../../events/presentation/patient-event.presentation';
 import { PatientEventService } from '../../../events/services/patient-event.service';
 import { LinkHistoryItemDto, LinkStatus, PendingLinkRequestDto } from '../../../linking/models/linking.models';
 import { LinkingService } from '../../../linking/services/linking.service';
@@ -49,6 +58,8 @@ export class StaffDashboardPage implements OnInit {
   patients: StaffPatientDto[] = [];
   selectedPatientPublicId = '';
   events: PatientEventDto[] = [];
+  selectedCalendarDate: string | null = null;
+  selectedCalendarEvent: PatientEventDto | null = null;
   contactRequests: ContactRequestDto[] = [];
   reviewReadiness: ReviewReadinessDto | null = null;
   betaExitChecklist: BetaExitChecklistDto | null = null;
@@ -93,6 +104,7 @@ export class StaffDashboardPage implements OnInit {
   contactResolutionNotes: Record<number, string> = {};
   betaExitNotes: Record<number, string> = {};
   activeSection: StaffSection = 'home';
+  private readonly loadedSections = new Set<StaffSection>();
 
   readonly navigationItems: Array<{ id: StaffSection; label: string; icon: string }> = [
     { id: 'home', label: 'Inicio', icon: 'home-outline' },
@@ -139,14 +151,12 @@ export class StaffDashboardPage implements OnInit {
 
   ngOnInit(): void {
     this.refreshSession();
-    this.loadActivityFeed();
-    this.loadSessions();
     this.loadPatients();
     this.loadReviewReadiness();
     this.loadBetaExitChecklist();
     this.loadContactRequests();
     this.loadPendingRequests();
-    this.loadHistory();
+    this.loadedSections.add('home');
   }
 
   refreshSession(): void {
@@ -164,7 +174,7 @@ export class StaffDashboardPage implements OnInit {
   }
 
   updateProfile(): void {
-    if (this.profileForm.invalid || this.isSavingProfile) {
+    if (this.profileForm.invalid || this.profileForm.pristine || this.isSavingProfile) {
       this.profileForm.markAllAsTouched();
       this.profileErrorMessage = 'Revisa nombre, apellido y telefono antes de guardar.';
       return;
@@ -439,6 +449,8 @@ export class StaffDashboardPage implements OnInit {
 
   selectPatient(patientPublicId: string): void {
     this.selectedPatientPublicId = patientPublicId;
+    this.selectedCalendarDate = null;
+    this.selectedCalendarEvent = null;
     this.eventForm.patchValue({ patientPublicId });
     this.statusForm.patchValue({ patientPublicId });
     this.loadEvents(patientPublicId);
@@ -474,6 +486,8 @@ export class StaffDashboardPage implements OnInit {
           this.eventForm.patchValue({ patientPublicId: '' });
           this.statusForm.patchValue({ patientPublicId: '' });
           this.events = [];
+          this.selectedCalendarDate = null;
+          this.selectedCalendarEvent = null;
         }
         this.successMessage = 'Paciente archivado. El codigo ya no acepta nuevas solicitudes.';
         this.loadActivityFeed();
@@ -486,7 +500,10 @@ export class StaffDashboardPage implements OnInit {
     });
   }
 
-  loadEvents(patientPublicId = this.eventForm.controls.patientPublicId.value ?? ''): void {
+  loadEvents(
+    patientPublicId = this.eventForm.controls.patientPublicId.value ?? '',
+    range?: PatientEventRange,
+  ): void {
     const cleanPatientId = patientPublicId.trim();
     if (!cleanPatientId || this.isLoadingEvents) {
       this.eventForm.controls.patientPublicId.markAsTouched();
@@ -497,9 +514,17 @@ export class StaffDashboardPage implements OnInit {
     this.isLoadingEvents = true;
     this.eventErrorMessage = '';
 
-    this.eventService.getEventsForStaff(cleanPatientId).subscribe({
+    this.eventService.getEventsForStaff(cleanPatientId, range).subscribe({
       next: (events) => {
-        this.events = events;
+        this.events = [...events].sort((first, second) => (
+          new Date(first.scheduledAt).getTime() - new Date(second.scheduledAt).getTime()
+        ));
+        this.selectedCalendarEvent = this.events.find((event) => event.id === this.selectedCalendarEvent?.id)
+          ?? this.events[0]
+          ?? null;
+        this.selectedCalendarDate = this.selectedCalendarEvent
+          ? this.localDateKey(this.selectedCalendarEvent.scheduledAt)
+          : null;
         this.isLoadingEvents = false;
       },
       error: (error) => {
@@ -678,6 +703,9 @@ export class StaffDashboardPage implements OnInit {
     this.eventService.changeStatus(event.id, status).subscribe({
       next: (updated) => {
         this.events = this.events.map((current) => current.id === updated.id ? updated : current);
+        if (this.selectedCalendarEvent?.id === updated.id) {
+          this.selectedCalendarEvent = updated;
+        }
         this.successMessage = 'Estado de evento actualizado.';
         this.loadActivityFeed();
         this.loadReviewReadiness();
@@ -689,16 +717,29 @@ export class StaffDashboardPage implements OnInit {
   }
 
   eventTypeLabel(type: PatientEventType): string {
-    const labels: Record<PatientEventType, string> = {
-      SURGERY: 'Cirugia',
-      EXAM: 'Examen',
-      VISIT: 'Visita',
-      STATE_CHANGE: 'Cambio de estado',
-      DISCHARGE: 'Alta',
-      OTHER: 'Otro',
-    };
+    return patientEventTypeLabel(type);
+  }
 
-    return labels[type] ?? type;
+  eventStatusLabel(status: PatientEventStatus): string {
+    return patientEventStatusLabel(status);
+  }
+
+  selectCalendarEvent(event: PatientEventDto): void {
+    this.selectedCalendarEvent = event;
+  }
+
+  loadVisibleEventRange(range: PatientEventRange): void {
+    if (!this.selectedPatientPublicId) {
+      return;
+    }
+    this.loadEvents(this.selectedPatientPublicId, range);
+  }
+
+  activityStatusLabel(status: string): string {
+    if (this.eventStatuses.includes(status as PatientEventStatus)) {
+      return patientEventStatusLabel(status as PatientEventStatus);
+    }
+    return status;
   }
 
   linkStatusLabel(status: LinkStatus): string {
@@ -753,6 +794,19 @@ export class StaffDashboardPage implements OnInit {
   }
 
   revokeSession(session: AuthSessionItemDto): void {
+    if (this.sessionActionId || this.isRevokingOtherSessions) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      session.current
+        ? 'Esta acción cerrará tu sesión actual. ¿Deseas continuar?'
+        : 'Esta acción cerrará el acceso seleccionado. ¿Deseas continuar?',
+    );
+    if (!confirmed) {
+      return;
+    }
+
     this.sessionActionId = session.sessionId;
     this.sessionErrorMessage = '';
 
@@ -775,7 +829,14 @@ export class StaffDashboardPage implements OnInit {
   }
 
   revokeOtherSessions(): void {
-    if (this.isRevokingOtherSessions) {
+    if (this.isRevokingOtherSessions || this.sessionActionId || !this.otherActiveSessions().length) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Se cerrarán ${this.otherActiveSessions().length} accesos en otros dispositivos. ¿Deseas continuar?`,
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -802,7 +863,24 @@ export class StaffDashboardPage implements OnInit {
 
   showSection(section: StaffSection): void {
     this.activeSection = section;
+    this.loadSectionData(section);
     void this.content?.scrollToTop(220);
+  }
+
+  currentSession(): AuthSessionItemDto | null {
+    return this.sessions.find((session) => session.current && this.sessionIsActive(session)) ?? null;
+  }
+
+  otherActiveSessions(): AuthSessionItemDto[] {
+    return this.sessions.filter((session) => !session.current && this.sessionIsActive(session));
+  }
+
+  closedSessions(): AuthSessionItemDto[] {
+    return this.sessions.filter((session) => !this.sessionIsActive(session));
+  }
+
+  closedSessionLabel(session: AuthSessionItemDto): string {
+    return session.revoked ? 'Revocada' : 'Expirada';
   }
 
   isFieldInvalid(controlName: keyof typeof this.eventForm.controls): boolean {
@@ -831,6 +909,27 @@ export class StaffDashboardPage implements OnInit {
       lastName: user.lastName,
       phoneNumber: user.phoneNumber ?? '',
     });
+    this.profileForm.markAsPristine();
+  }
+
+  private loadSectionData(section: StaffSection): void {
+    if (this.loadedSections.has(section)) {
+      return;
+    }
+
+    if (section === 'requests') {
+      this.loadActivityFeed();
+      this.loadHistory();
+    }
+    if (section === 'account') {
+      this.loadSessions();
+    }
+
+    this.loadedSections.add(section);
+  }
+
+  private sessionIsActive(session: AuthSessionItemDto): boolean {
+    return !session.revoked && new Date(session.expiresAt).getTime() > Date.now();
   }
 
   private cleanOptional(value: string | null | undefined): string | null {
@@ -838,6 +937,14 @@ export class StaffDashboardPage implements OnInit {
       return null;
     }
     return value.trim();
+  }
+
+  private localDateKey(value: string): string {
+    const date = new Date(value);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
 

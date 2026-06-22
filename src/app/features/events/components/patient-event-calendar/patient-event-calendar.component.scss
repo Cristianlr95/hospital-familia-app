@@ -1,4 +1,4 @@
-.family-calendar {
+.patient-event-calendar {
   background: #fff;
   border: 1px solid var(--hf-soft-border);
   border-radius: 0.9rem;
@@ -47,14 +47,35 @@
   cursor: pointer;
   display: inline-flex;
   justify-content: center;
-  min-height: 2.5rem;
-  min-width: 2.5rem;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
 }
 
 .calendar-controls .today-button {
   color: var(--hf-primary);
   font-weight: 850;
   padding-inline: 0.75rem;
+}
+
+.calendar-controls button:focus-visible,
+.calendar-day:focus-visible,
+.agenda-event:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.4);
+  outline-offset: 2px;
+}
+
+.loading-state {
+  align-items: center;
+  color: var(--hf-muted);
+  display: flex;
+  gap: 0.65rem;
+  justify-content: center;
+  min-height: 14rem;
+}
+
+.calendar-layout {
+  display: grid;
+  gap: 1rem;
 }
 
 .month-label {
@@ -92,6 +113,7 @@
   font-size: 0.78rem;
   font-weight: 800;
   justify-content: center;
+  min-height: 2.75rem;
   min-width: 0;
 }
 
@@ -107,7 +129,7 @@
 }
 
 .calendar-day.outside {
-  color: #cbd5e1;
+  color: #94a3b8;
 }
 
 .event-dots {
@@ -143,7 +165,6 @@
 
 .day-agenda {
   border-top: 1px solid var(--hf-soft-border);
-  margin-top: 0.8rem;
   padding-top: 0.9rem;
 }
 
@@ -176,9 +197,14 @@
   display: flex;
   gap: 0.65rem;
   margin-top: 0.6rem;
+  min-height: 2.75rem;
   padding: 0.7rem;
   text-align: left;
   width: 100%;
+}
+
+.agenda-event:hover {
+  border-color: #93c5fd;
 }
 
 .event-copy {
@@ -206,8 +232,24 @@
   font-weight: 850;
 }
 
+@media (min-width: 900px) {
+  .patient-event-calendar:not(.compact) .calendar-layout {
+    align-items: start;
+    grid-template-columns: minmax(20rem, 1.1fr) minmax(18rem, 0.9fr);
+  }
+
+  .patient-event-calendar:not(.compact) .day-agenda {
+    border-left: 1px solid var(--hf-soft-border);
+    border-top: 0;
+    margin-top: 1rem;
+    min-height: 22rem;
+    padding-left: 1rem;
+    padding-top: 0;
+  }
+}
+
 @media (max-width: 520px) {
-  .family-calendar {
+  .patient-event-calendar {
     padding: 0.8rem;
   }
 
@@ -226,7 +268,6 @@
   .calendar-day {
     border-radius: 0.5rem;
     font-size: 0.7rem;
-    min-height: 2.5rem;
   }
 
   .agenda-event {

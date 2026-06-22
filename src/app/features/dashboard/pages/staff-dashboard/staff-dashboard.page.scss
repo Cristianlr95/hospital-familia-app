@@ -552,6 +552,17 @@
   background: #f8fafc;
 }
 
+.session-history {
+  border-top: 1px solid var(--hf-soft-border);
+  display: grid;
+  gap: 0.6rem;
+  padding-top: 0.85rem;
+}
+
+.closed-session {
+  opacity: 0.78;
+}
+
 .text-action {
   background: transparent;
   border: 0;
@@ -598,6 +609,69 @@
 .event-form-panel ion-button {
   --border-radius: var(--hf-radius);
   margin-top: 0.5rem;
+}
+
+.calendar-guidance {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--hf-radius);
+  margin: 0.8rem 0 0;
+  padding: 0.85rem;
+}
+
+.staff-event-calendar {
+  display: block;
+  margin-top: 0.9rem;
+}
+
+.selected-event-panel {
+  background: #f8fafc;
+  border: 1px solid var(--hf-soft-border);
+  border-radius: var(--hf-radius);
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.9rem;
+  padding: 0.9rem;
+}
+
+.selected-event-copy {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.8rem;
+  justify-content: space-between;
+}
+
+.selected-event-copy h3 {
+  color: var(--hf-text);
+  font-size: 1rem;
+  font-weight: 900;
+  margin: 0;
+}
+
+.selected-event-copy p:not(.eyebrow) {
+  margin: 0.25rem 0 0;
+}
+
+.event-status-control {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.event-status-control ion-label {
+  color: var(--hf-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.event-status-control ion-select {
+  --background: #fff;
+  border: 1px solid var(--hf-soft-border);
+  border-radius: var(--hf-radius);
+  min-height: 2.75rem;
+  min-width: 11rem;
+  padding-inline: 0.7rem;
 }
 
 .status-form-panel {
@@ -701,7 +775,7 @@
   }
 
   .events-panel {
-    grid-column: 2;
+    grid-column: 1 / -1;
     grid-row: 5;
   }
 
@@ -758,5 +832,16 @@
   .priority-card ion-button {
     justify-self: start;
     margin: 0;
+  }
+
+  .selected-event-copy,
+  .event-status-control {
+    align-items: stretch;
+    display: grid;
+    justify-content: stretch;
+  }
+
+  .event-status-control ion-select {
+    width: 100%;
   }
 }
