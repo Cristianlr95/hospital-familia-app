@@ -2,16 +2,16 @@
   <main class="auth-shell">
     <section class="brand-panel">
       <p class="eyebrow">Hospital Familia</p>
-      <h1>Informacion segura para acompanar con calma.</h1>
+      <h1>Información segura para acompañar con calma.</h1>
       <p>
-        Ingresa como familiar o equipo del hospital para revisar informacion autorizada y avisos importantes.
+        Ingresa como familiar o integrante del equipo hospitalario para revisar información autorizada y avisos importantes.
       </p>
     </section>
 
-    <section class="auth-card" aria-label="Inicio de sesion">
+    <section class="auth-card" aria-label="Inicio de sesión">
       <div class="card-heading">
         <p class="eyebrow">Acceso tutor y staff</p>
-        <h2>Iniciar sesion</h2>
+        <h2>Iniciar sesión</h2>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="submit()" autocomplete="off">
@@ -19,7 +19,7 @@
         <input class="autofill-decoy" type="password" name="password" autocomplete="current-password" tabindex="-1" aria-hidden="true">
 
         <div class="field" [class.field-focus]="focusedField === 'email'">
-          <label for="hospital-familia-login-email">Correo electronico</label>
+          <label for="hospital-familia-login-email">Correo electrónico</label>
           <ion-input
             id="hospital-familia-login-email"
             type="email"
@@ -36,25 +36,25 @@
           ></ion-input>
         </div>
         <ion-note color="danger" *ngIf="form.controls.email.touched && form.controls.email.invalid">
-          Ingresa un email valido.
+          Ingresa un email válido.
         </ion-note>
 
         <div class="field" [class.field-focus]="focusedField === 'password'">
-          <label for="hospital-familia-login-password">Contrasena</label>
+          <label for="hospital-familia-login-password">Contraseña</label>
           <ion-input
             id="hospital-familia-login-password"
             type="password"
             autocomplete="new-password"
             enterkeyhint="done"
             name="hospital_familia_login_password"
-            placeholder="Tu contrasena"
+            placeholder="Tu contraseña"
             formControlName="password"
             (ionFocus)="focusedField = 'password'"
             (ionBlur)="focusedField = null"
           ></ion-input>
         </div>
         <ion-note color="danger" *ngIf="form.controls.password.touched && form.controls.password.invalid">
-          La contrasena debe tener al menos 8 caracteres.
+          La contraseña debe tener al menos 8 caracteres.
         </ion-note>
 
         <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
@@ -66,11 +66,11 @@
       </form>
 
       <p class="switch-flow">
-        Aun no tienes cuenta?
+        ¿Aún no tienes cuenta?
         <a routerLink="/auth/register">Crear cuenta de tutor</a>
       </p>
       <p class="switch-flow secondary-flow">
-        Olvidaste tu contrasena?
+        ¿Olvidaste tu contraseña?
         <a routerLink="/auth/reset-password">Recuperar acceso</a>
       </p>
     </section>

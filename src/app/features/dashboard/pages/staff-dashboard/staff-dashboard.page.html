@@ -1,6 +1,21 @@
 <ion-header class="app-shell" [translucent]="true">
   <ion-toolbar>
     <ion-title>Hospital Familia</ion-title>
+    <nav class="desktop-nav" aria-label="Navegación principal del equipo">
+      <button
+        type="button"
+        *ngFor="let item of navigationItems"
+        [class.active]="activeSection === item.id"
+        [attr.aria-current]="activeSection === item.id ? 'page' : null"
+        (click)="showSection(item.id)"
+      >
+        <ion-icon [name]="item.icon"></ion-icon>
+        <span>{{ item.label }}</span>
+        <ion-badge *ngIf="item.id === 'requests' && pendingRequests.length" color="danger">
+          {{ pendingRequests.length }}
+        </ion-badge>
+      </button>
+    </nav>
     <ion-buttons slot="end">
       <ion-button (click)="logout()">Salir</ion-button>
     </ion-buttons>
@@ -8,19 +23,85 @@
 </ion-header>
 
 <ion-content class="staff-content" [fullscreen]="true">
-  <section class="hero">
+  <section class="hero" *ngIf="activeSection === 'home'">
     <p class="eyebrow">Panel staff</p>
-    <h1>Gestion de solicitudes y eventos familiares.</h1>
+    <h1>Todo lo importante, en orden.</h1>
     <p class="hero-copy">
-      Revisa vinculaciones pendientes, aprueba accesos autorizados y administra el calendario visible para tutores.
+      Prioriza solicitudes pendientes, pacientes activos y próximos eventos familiares desde un único resumen operativo.
     </p>
     <p class="staff-context" *ngIf="user">
-      Sesion staff activa: {{ user.firstName }} {{ user.lastName }} - {{ user.email }}
+      Sesión staff activa: {{ user.firstName }} {{ user.lastName }} · {{ user.email }}
     </p>
   </section>
 
+  <section class="section-heading" *ngIf="activeSection !== 'home'">
+    <p class="eyebrow">Panel staff</p>
+    <h1>
+      {{ activeSection === 'patients' ? 'Pacientes y estado visible' : activeSection === 'requests' ? 'Solicitudes y contacto' : activeSection === 'calendar' ? 'Agenda familiar' : 'Cuenta y salida beta' }}
+    </h1>
+    <p>
+      {{ activeSection === 'patients' ? 'Crea pacientes, administra códigos y actualiza el resumen autorizado.' : activeSection === 'requests' ? 'Resuelve vinculaciones y solicitudes de orientación de los tutores.' : activeSection === 'calendar' ? 'Crea, consulta y actualiza eventos visibles para las familias.' : 'Gestiona tu perfil, seguridad y controles de preparación beta.' }}
+    </p>
+  </section>
+
+  <section class="home-overview" *ngIf="activeSection === 'home'">
+    <article class="overview-card overview-card-primary">
+      <div>
+        <p class="eyebrow">Solicitudes pendientes</p>
+        <strong>{{ pendingRequests.length }}</strong>
+        <span>requieren revisión del equipo</span>
+      </div>
+      <ion-button fill="clear" (click)="showSection('requests')">Revisar ahora</ion-button>
+    </article>
+
+    <article class="overview-card">
+      <div>
+        <p class="eyebrow">Pacientes activos</p>
+        <strong>{{ patients.length }}</strong>
+        <span>disponibles para seguimiento familiar</span>
+      </div>
+      <ion-button fill="clear" (click)="showSection('patients')">Ver pacientes</ion-button>
+    </article>
+
+    <article class="overview-card">
+      <div>
+        <p class="eyebrow">Contacto tutor</p>
+        <strong>{{ contactRequests.length }}</strong>
+        <span>solicitudes abiertas</span>
+      </div>
+      <ion-button fill="clear" (click)="showSection('requests')">Atender solicitudes</ion-button>
+    </article>
+
+    <article class="overview-card">
+      <div>
+        <p class="eyebrow">Salida beta</p>
+        <strong>{{ betaExitChecklist?.progressPercent || 0 }}%</strong>
+        <span>del checklist formal completado</span>
+      </div>
+      <ion-button fill="clear" (click)="showSection('account')">Abrir controles</ion-button>
+    </article>
+
+    <article class="priority-card" *ngIf="pendingRequests[0] as request">
+      <div>
+        <p class="eyebrow">Prioridad operativa</p>
+        <h2>{{ request.patientDisplayName }}</h2>
+        <p>{{ request.tutorFullName }} solicita acceso familiar desde {{ request.requestedAt | date: 'short' }}.</p>
+      </div>
+      <ion-button (click)="showSection('requests')">Resolver solicitud</ion-button>
+    </article>
+
+    <article class="priority-card status-highlight">
+      <div>
+        <p class="eyebrow">Estado de revisión</p>
+        <h2>{{ reviewProgressPercent() }}% listo</h2>
+        <p>{{ reviewReadiness?.passedChecks || 0 }} de {{ reviewReadiness?.totalChecks || 0 }} verificaciones automáticas aprobadas.</p>
+      </div>
+      <ion-button fill="outline" (click)="showSection('account')">Ver checklist</ion-button>
+    </article>
+  </section>
+
   <main class="staff-grid">
-    <section class="panel profile-panel">
+    <section class="panel profile-panel" *ngIf="activeSection === 'account'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Cuenta</p>
@@ -61,7 +142,7 @@
       </form>
     </section>
 
-    <section class="panel review-panel">
+    <section class="panel review-panel" *ngIf="activeSection === 'account'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Salida beta</p>
@@ -119,7 +200,7 @@
       <p class="error-message inline-error" *ngIf="reviewReadinessErrorMessage">{{ reviewReadinessErrorMessage }}</p>
     </section>
 
-    <section class="panel beta-exit-panel">
+    <section class="panel beta-exit-panel" *ngIf="activeSection === 'account'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Cierre beta</p>
@@ -184,7 +265,7 @@
       <p class="error-message inline-error" *ngIf="betaExitChecklistErrorMessage">{{ betaExitChecklistErrorMessage }}</p>
     </section>
 
-    <section class="panel patients-panel">
+    <section class="panel patients-panel" *ngIf="activeSection === 'patients'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Pacientes</p>
@@ -248,7 +329,7 @@
       </div>
     </section>
 
-    <section class="panel contact-requests-panel">
+    <section class="panel contact-requests-panel" *ngIf="activeSection === 'requests'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Contacto tutor</p>
@@ -299,7 +380,7 @@
       <p class="error-message inline-error" *ngIf="contactRequestErrorMessage">{{ contactRequestErrorMessage }}</p>
     </section>
 
-    <section class="panel requests-panel">
+    <section class="panel requests-panel" *ngIf="activeSection === 'requests'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Vinculaciones</p>
@@ -368,7 +449,7 @@
       <p class="error-message inline-error" *ngIf="requestErrorMessage">{{ requestErrorMessage }}</p>
     </section>
 
-    <section class="panel history-panel">
+    <section class="panel history-panel" *ngIf="activeSection === 'requests'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Historial</p>
@@ -409,7 +490,7 @@
       <p class="error-message inline-error" *ngIf="historyErrorMessage">{{ historyErrorMessage }}</p>
     </section>
 
-    <section class="panel activity-panel">
+    <section class="panel activity-panel" *ngIf="activeSection === 'requests'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Actividad</p>
@@ -441,7 +522,7 @@
       <p class="error-message inline-error" *ngIf="activityErrorMessage">{{ activityErrorMessage }}</p>
     </section>
 
-    <section class="panel sessions-panel">
+    <section class="panel sessions-panel" *ngIf="activeSection === 'account'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Seguridad</p>
@@ -493,7 +574,7 @@
       <p class="error-message inline-error" *ngIf="sessionErrorMessage">{{ sessionErrorMessage }}</p>
     </section>
 
-    <section class="panel event-form-panel">
+    <section class="panel event-form-panel" *ngIf="activeSection === 'calendar'">
       <p class="eyebrow">Calendario</p>
       <h2>Crear evento visible</h2>
 
@@ -570,7 +651,7 @@
       <p class="error-message inline-error" *ngIf="eventFormErrorMessage">{{ eventFormErrorMessage }}</p>
     </section>
 
-    <section class="panel status-form-panel">
+    <section class="panel status-form-panel" *ngIf="activeSection === 'patients'">
       <p class="eyebrow">Estado visible</p>
       <h2>Actualizar resumen familiar</h2>
 
@@ -616,7 +697,7 @@
       <p class="error-message inline-error" *ngIf="statusErrorMessage">{{ statusErrorMessage }}</p>
     </section>
 
-    <section class="panel events-panel">
+    <section class="panel events-panel" *ngIf="activeSection === 'calendar'">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Eventos</p>
@@ -657,3 +738,21 @@
 
   <p class="success-message" *ngIf="successMessage">{{ successMessage }}</p>
 </ion-content>
+
+<nav class="mobile-nav staff-mobile-nav" aria-label="Navegación móvil del equipo">
+  <button
+    type="button"
+    *ngFor="let item of navigationItems"
+    [class.active]="activeSection === item.id"
+    [attr.aria-current]="activeSection === item.id ? 'page' : null"
+    (click)="showSection(item.id)"
+  >
+    <span class="mobile-nav-icon">
+      <ion-icon [name]="item.icon"></ion-icon>
+      <ion-badge *ngIf="item.id === 'requests' && pendingRequests.length" color="danger">
+        {{ pendingRequests.length }}
+      </ion-badge>
+    </span>
+    <span>{{ item.label }}</span>
+  </button>
+</nav>
