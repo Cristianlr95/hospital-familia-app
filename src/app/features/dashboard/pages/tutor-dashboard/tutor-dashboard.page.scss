@@ -77,6 +77,11 @@
   padding-bottom: 2rem;
 }
 
+.overview-strip {
+  display: grid;
+  gap: 0.75rem;
+}
+
 .overview-card,
 .priority-card {
   background: var(--hf-surface);
@@ -90,6 +95,7 @@
   align-items: flex-end;
   display: flex;
   justify-content: space-between;
+  min-height: 6.25rem;
 }
 
 .overview-card-primary {
@@ -127,6 +133,14 @@
   display: flex;
   gap: 1rem;
   justify-content: space-between;
+}
+
+.home-status {
+  border-left: 0.35rem solid var(--hf-success);
+}
+
+.next-event-card {
+  border-left: 0.35rem solid var(--hf-primary);
 }
 
 .priority-card h2 {
@@ -228,6 +242,7 @@
 }
 
 .dashboard-grid {
+  align-items: start;
   display: grid;
   gap: 1rem;
   margin: 0 auto;
@@ -243,6 +258,11 @@
   box-shadow: var(--hf-shadow);
   margin: 0;
   overflow: hidden;
+}
+
+.empty-card ion-card-header,
+.empty-card ion-card-content {
+  padding: 1rem;
 }
 
 .empty-card ion-card-title,
@@ -313,6 +333,17 @@ dd {
 
 .panel {
   padding: 1rem;
+}
+
+.embedded-calendar,
+.activity-calendar {
+  display: block;
+  margin-top: 0.9rem;
+}
+
+.featured-event {
+  background: #fff;
+  border-color: #86efac;
 }
 
 .field {
@@ -407,6 +438,7 @@ dd {
 .contact-panel {
   background: #ecfeff;
   border-color: #a5f3fc;
+  order: 2;
 }
 
 .contact-form ion-button[type='submit'] {
@@ -423,11 +455,14 @@ dd {
 .activity-panel {
   background: #fff7ed;
   border-color: #fed7aa;
+  grid-column: 1 / -1;
+  order: 3;
 }
 
 .notification-panel {
   background: #eef2ff;
   border-color: #c7d2fe;
+  order: 1;
 }
 
 .notification-summary {
@@ -483,6 +518,7 @@ dd {
 
 .preference-row {
   align-items: center;
+  min-height: 4rem;
 }
 
 .preference-row ion-toggle {
@@ -491,6 +527,82 @@ dd {
 
 .sessions-panel {
   background: #f8fafc;
+}
+
+.session-summary-bar {
+  background: #0f172a;
+  border-radius: var(--hf-radius);
+  color: #fff;
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 1rem;
+  overflow: hidden;
+}
+
+.session-summary-bar div {
+  background: rgba(255, 255, 255, 0.06);
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.8rem;
+}
+
+.session-summary-bar strong {
+  font-size: 1.3rem;
+  font-weight: 950;
+}
+
+.session-summary-bar span {
+  color: #cbd5e1;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.session-group {
+  margin-top: 1rem;
+}
+
+.session-group-title {
+  color: var(--hf-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+}
+
+.session-row {
+  align-items: center;
+  min-height: 5rem;
+}
+
+.current-session {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.closed-session {
+  min-height: 3.75rem;
+  opacity: 0.78;
+}
+
+.session-history-toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--hf-text);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 850;
+  justify-content: space-between;
+  min-height: 2.75rem;
+  padding: 0;
+  width: 100%;
+}
+
+.session-history-toggle span:last-child {
+  color: var(--hf-primary);
 }
 
 .error-message {
@@ -559,15 +671,16 @@ dd {
   }
 
   .home-overview {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
   }
 
-  .priority-card {
-    grid-column: span 2;
+  .overview-strip {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .empty-card {
-    grid-row: span 2;
+  .priority-card:not(.home-status) {
+    grid-column: 1 / -1;
   }
 
   .form-grid {
@@ -576,7 +689,7 @@ dd {
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 759px) {
   .hero {
     padding: 2rem 1rem 1rem;
   }
@@ -621,5 +734,15 @@ dd {
   .priority-card ion-button {
     justify-self: start;
     margin: 0;
+  }
+
+  .session-summary-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .session-summary-bar div {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
   }
 }
